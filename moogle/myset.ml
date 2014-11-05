@@ -379,11 +379,13 @@ struct
 
   let test_is_empty () =
 		
-		assert(is_empty empty) ; 
+		(* ensure empty set is empty *)
+		assert(is_empty D.empty) ; 
 		
 		let i = C.gen_random() in
 		let s1 = D.insert D.empty i true in
 		
+		(* test the set with one element and then that set with the element removed *)
 		assert(not (is_empty s1)) ;
 		assert(is_empty (D.remove s1 i)) ;
     ()
