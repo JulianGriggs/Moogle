@@ -58,7 +58,7 @@ let print s =
  * Keep crawling until we've
  * reached the maximum number of links (n) or the frontier is empty. *)
 
-let rec addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
+let addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
   let url = page.url in
   let words = page.words in
     List.fold_right 
@@ -77,7 +77,7 @@ let rec addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
       d
   ;;
 
-let rec addLinksToSet (page : page) (set: LinkSet.set) : LinkSet.set = 
+let addLinksToSet (page : page) (set: LinkSet.set) : LinkSet.set = 
   let links = page.links in
   List.fold_right (fun x y -> LinkSet.insert x y) links set
 ;;
@@ -92,6 +92,7 @@ let rec crawl (n:int) (frontier: LinkSet.set)
       | Some (link, newSet) -> 
         let updatedVis = LinkSet.insert link visited in 
         (match get_page link with
+          (* Might want to look at to ensure no infinite loop*)
           | None -> crawl n newSet updatedVis d
           | Some page -> 
             let updatedDict = addLinkForEachWord page d in
