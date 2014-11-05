@@ -3,3 +3,5 @@ moogle/_build
 moogle/.project
 moogle/.paths
 moogle/.settings
+moogle/moogle.d.byte
+.*~
