@@ -7,7 +7,7 @@ sig
   val string_of_node : node -> string
   val gen : unit -> node
 end
-
+ 
 (* A signature for directed graphs with unweighted edges *)
 module type GRAPH =
 sig 
@@ -213,5 +213,5 @@ struct
     assert (G.neighbors g2 "d" = None) ;
 
     assert (let t = deopt_lst (G.neighbors g2 "a") in
-              t = ["b";"c"] or t = ["c";"b"]) )
+              t = ["b";"c"] || t = ["c";"b"]) )
 end

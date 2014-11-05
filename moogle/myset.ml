@@ -226,16 +226,51 @@ end
 (* DictSet: a functor that creates a SET by calling our           *)
 (* Dict.Make functor                                              *)
 (******************************************************************)
-(*
+
 module DictSet(C : COMPARABLE) : (SET with type elt = C.t) = 
 struct
   module D = Dict.Make(struct
-      ??? fill this in!
-  end)
+		type key = C.t
+		type value = bool
+		let compare = C.compare
+    let string_of_key = C.string_of_t
+    let string_of_value = string_of_bool
 
+    (* These functions are for testing purposes *)
+    let gen_key () = C.gen ()
+    let gen_key_gt x () = gen_key ()
+    let gen_key_lt x () = gen_key ()
+    let gen_key_random () = gen_key ()
+    let gen_key_between x y () = C.gen_between x y ()
+		let gen_value = (fun () -> true)
+    let gen_pair () = (gen_key(),gen_value())
+  end)
+	
+	open Order
   type elt = D.key
   type set = D.dict
-  let empty = ???
+	
+	(* INVARIANT: sorted, no duplicates *)
+  let empty = D.empty
+  let is_empty d = 
+		D.fold (fun _ _ size -> size + 1) 0 d = 0
+  let singleton k = D.insert D.empty k true
+  let insert k d = D.insert d k true
+  let union d1 d2 = D.fold (fun k v _ -> D.insert d2 k v) D.empty d1
+  let remove k d = D.remove d k
+  let intersect d1 d2 = 
+		D.fold (fun k v d -> 
+			if D.member d2 k then D.insert d k v else d) D.empty d1
+
+  let member d k = D.member d k 
+
+  let choose d = 
+		match D.choose d with 
+		| None -> None
+		| Some (k,_,set) -> Some (k,set)
+  let fold f d = 
+		let f2 = (fun k _ d' -> f k d') in
+		D.fold f2 d
 
   (* implement the rest of the functions in the signature! *)
 
@@ -253,7 +288,7 @@ struct
   let run_tests () = 
     ()
 end
-*)
+
 
 
 
@@ -282,6 +317,6 @@ IntDictSet.run_tests();;
 module Make(C : COMPARABLE) : (SET with type elt = C.t) = 
   (* Change this line to use our dictionary implementation when your are 
    * finished. *)
-  ListSet (C)
-  (* DictSet (C) *)
+  (*ListSet (C)*)
+  DictSet (C) 
 
