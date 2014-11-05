@@ -342,7 +342,7 @@ struct
   (* test the remove method *)
   let test_remove () =
 		let zero = C.gen() in 
-		let one = (C.gen_gt zero) () in
+		let one = C.gen_gt zero () in
 		let i = C.gen_random() in
 		
 		(* test removing from empty set *)
@@ -352,7 +352,7 @@ struct
 		let s1 = D.insert D.empty i true in
 		
 		assert(remove i s1 = D.empty) ;
-		assert(remove ((C.gen_gt i)()) s1 = s1) ;
+		assert(remove (C.gen_gt i ()) s1 = s1) ;
 		
 		(* s2 : {1,2,3...100} *)
 		let s2 = generate_consecutive_dict 100 in 
@@ -378,6 +378,14 @@ struct
     ()
 
   let test_is_empty () =
+		
+		assert(is_empty empty) ; 
+		
+		let i = C.gen_random() in
+		let s1 = D.insert D.empty i true in
+		
+		assert(not (is_empty s1)) ;
+		assert(is_empty (D.remove s1 i)) ;
     ()
 
   let test_singleton () =
