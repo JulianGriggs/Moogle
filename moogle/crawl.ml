@@ -2,7 +2,7 @@ open Util ;;
 open CrawlerServices ;;
 open Order ;;
 open Pagerank ;;
-
+  
 
 module MoogleRanker
   = InDegreeRanker (PageGraph) (PageScore)
