@@ -286,8 +286,17 @@ struct
   (* comprehensive tests to test ALL your functions.              *)
   (****************************************************************)
 
-	let rec size (d: set) : C.t = 
-		D.fold (fun _ _ d -> (C.gen_gt d)()) (C.gen()) d
+
+  let size (set:set) : int = 
+    let rec aux (s:set) (acc:int) =
+      match D.choose s with
+      | None -> acc
+      | Some (_, _, d') -> aux d' (acc + 1)
+    in
+    aux set 0
+  
+
+
 (*
   let generate_random_dict (size: int) : set =
     let rec aux (size: int) (d: set) = 
@@ -301,19 +310,17 @@ struct
     	else aux (size - 1) (D.insert d size true)
 		in aux size D.empty 
 		*)
-  (*let test_insert () =
+  let test_insert () =
 		let i = C.gen_random() in
     (* test inserting into empty set *)
     let s1 = insert i empty in
     assert(member s1 i) ;
+    assert(size s1 = 1);
+    assert(size empty = 0);
     ()
 
   let test_remove () =
-    let elts = generate_random_list 100 in
-    let s1 = insert_list empty elts in
-    let s2 = List.fold_right (fun k r -> remove k r) elts s1 in
-    List.iter (fun k -> assert(not (member s2 k))) elts ;
-    ()*)
+    ()
 
   let test_union () =
     ()
@@ -338,9 +345,9 @@ struct
 
   (* add your test functions to run_tests *)
   let run_tests () = 
-  (*  test_insert () ;
+    test_insert () ;
     test_remove () ;
-   *) test_union () ;
+    test_union () ;
     test_intersect () ;
     test_member () ;
     test_choose () ;
