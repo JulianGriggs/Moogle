@@ -295,13 +295,6 @@ struct
       | Some (_, _, d') -> aux d' (acc + 1)
     in
     aux set 0
-
-(*
-  let generate_random_dict (size: int) : set =
-    let rec aux (size: int) (d: set) = 
-			if size <= 0 then d
-    	else aux (size - 1) (D.insert d (C.gen_random()) true)
-		in aux size D.empty *)
 		
 	(* testing helper method to create a set with elements 1,2,3...,size *)
 	let generate_consecutive_dict (size: int) : set =
@@ -455,9 +448,32 @@ struct
     ()
 
   let test_choose () =
+		
+		(* choose from empty list *)
+		assert(choose D.empty = None) ;
+		
+		let zero = C.gen() in 
+		let one = C.gen_gt zero () in
+		
+		let s1 = D.insert D.empty one true in 
+		
+		(* choose from list only containing {1} *)
+		match choose s1 with 
+		| None -> assert (false) ;
+		| Some (k,d) -> assert (k = one) ; assert (d = D.empty) ;
+		
+		(* s2 : {1,2,3...100} *)
+		let s2 = generate_consecutive_dict 100 in 
+		
+		(* choose from list of s2 *)
+		let c2 = choose s2 in 
+		match c2 with 
+		| None -> assert (false) ;
+		| Some (k,d) -> assert(size d = 99) ; assert (not (D.member d k)) ;
     ()
 
   let test_fold () =
+		(*let fold_size = fold*)
     ()
 
   let test_is_empty () =
