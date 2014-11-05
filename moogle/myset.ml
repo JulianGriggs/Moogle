@@ -256,7 +256,9 @@ struct
 		D.fold (fun _ _ size -> size + 1) 0 d = 0
   let singleton k = D.insert D.empty k true
   let insert k d = D.insert d k true
-  let union d1 d2 = D.fold (fun k v _ -> D.insert d2 k v) D.empty d1
+  let union d1 d2 = 
+    if d1 = D.empty then d2 
+    else D.fold (fun k v _ -> D.insert d2 k v) D.empty d1
   let remove k d = D.remove d k
   let intersect d1 d2 = 
 		D.fold (fun k v d -> 
@@ -359,6 +361,36 @@ struct
     ()
 
   let test_union () =
+    let i0 = C.gen_random() in
+    let i1 = C.gen_gt i0 () in
+
+    (* test that union disjoint sets is equal to the set containing all of the 
+     * elements *)
+    let s0 = D.insert D.empty i0 true in
+    let s1 = D.insert D.empty i1 true in
+    let s2 = D.insert s1 i0 true in
+    assert (union s0 s1 = s2);
+
+    (* test that the union of two disjoint singleton sets is of size 2 *)
+    assert (size (union s0 s1) = 2);
+
+    (* test that the union of sets containing the same items is equal
+     * to one of the sets *)
+    let s0' = D.insert s0 i1 true in
+    let s1' = D.insert s1 i0 true in
+    assert (union s0' s1' = s0' || union s0' s1' = s1');
+
+    (* test that the union of two identical sets has same size as the sets *)
+    assert (size (union s0' s1') = 2);
+
+    (* test that the union of the empty set with the empty set is the 
+     * empty set *)
+    assert (union D.empty D.empty = D.empty);
+
+    (* test that the union between a non empty set and an empty set 
+     * is equal to the non empty set *)
+    assert (union D.empty s0 = s0);
+    assert (union s0 D.empty = s0);
     ()
 
   let test_intersect () =
