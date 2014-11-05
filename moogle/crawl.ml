@@ -48,16 +48,12 @@ let print s =
 (*    PART 1: CRAWLER                                                  *)
 (***********************************************************************)
 
-(* TODO: Build an index as follows:
- * 
- * Remove a link from the frontier (the set of links that have yet to
- * be visited), visit this link, add its outgoing links to the
- * frontier, and update the index so that all words on this page are
- * mapped to linksets containing this url.
- *
- * Keep crawling until we've
- * reached the maximum number of links (n) or the frontier is empty. *)
-
+(* This is a function that takes a page and a WordDict.dict and returns an 
+ * updated WordDict.dict.  For each word on the page, if it exists in the 
+ * dictionary, then the link for the page is simply added to the set.  If it
+ * doesn't exist then the word is added as a new key with value equal to the
+ * singleton set with the page's link as the sole value.
+ *)
 let addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
   let url = page.url in
   let words = page.words in
@@ -77,12 +73,23 @@ let addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
       d
   ;;
 
+(* Takes a page and a LinkSet.set and returns a new set with all of
+ * the links on the page added to the set.
+ *)
 let addLinksToSet (page : page) (set: LinkSet.set) : LinkSet.set = 
   let links = page.links in
   List.fold_right (fun x y -> LinkSet.insert x y) links set
 ;;
 
-
+(* Build an index as follows:
+ * 
+ * Remove a link from the frontier (the set of links that have yet to
+ * be visited), visit this link, add its outgoing links to the
+ * frontier, and update the index so that all words on this page are
+ * mapped to linksets containing this url.
+ *
+ * Keep crawling until we've
+ * reached the maximum number of links (n) or the frontier is empty. *)
 let rec crawl (n:int) (frontier: LinkSet.set)
     (visited : LinkSet.set) (d:WordDict.dict) : WordDict.dict = 
   if n = 0 then d
