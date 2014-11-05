@@ -286,7 +286,7 @@ struct
   (* comprehensive tests to test ALL your functions.              *)
   (****************************************************************)
 
-
+	(* testing helper method to compute size of a set *)
   let size (set:set) : int = 
     let rec aux (s:set) (acc:int) =
       match D.choose s with
@@ -294,22 +294,22 @@ struct
       | Some (_, _, d') -> aux d' (acc + 1)
     in
     aux set 0
-  
 
-
-(*
-  let generate_random_dict (size: int) : set =
+(*  let generate_random_dict (size: int) : set =
     let rec aux (size: int) (d: set) = 
 			if size <= 0 then d
     	else aux (size - 1) (D.insert d (C.gen_random()) true)
-		in aux size D.empty 
+		in aux size D.empty *)
 		
+	(* testing helper method to create a set with elements 1,2,3...,size *)
 	let generate_consecutive_dict (size: int) : set =
-    let rec aux (size: int) (d: set) = 
+    let rec aux (size: int) (d: set) (inc : C.t) = 
+			let inc' = ((C.gen_gt inc) ()) in
 			if size <= 0 then d
-    	else aux (size - 1) (D.insert d size true)
-		in aux size D.empty 
-		*)
+    	else aux (size - 1) (D.insert d inc' true) inc'
+		in aux size D.empty (C.gen())
+	
+	(* test the insert method *)
   let test_insert () =
 		let i = C.gen_random() in
     (* test inserting into empty set *)
@@ -319,7 +319,21 @@ struct
     assert(size empty = 0);
     ()
 
+  (* test the remove method *)
   let test_remove () =
+		let zero = C.gen() in 
+		let one = (C.gen_gt zero) () in
+		assert(remove (zero) D.empty = D.empty) ;
+		let i = C.gen_random() in
+		(* s1 : {1} *)
+		let s1 = D.insert D.empty i true in
+		assert(remove i s1 = D.empty) ;
+		assert(remove ((C.gen_gt i)()) s1 = s1) ;
+		(* s2 : {1,2,3...100} *)
+		let s2 = generate_consecutive_dict 100 in 
+		assert (remove zero s2 = s2) ;
+		assert (size (remove one s2) = 99) ; 
+		assert (not (D.member (remove one s2) one)) ; 
     ()
 
   let test_union () =
