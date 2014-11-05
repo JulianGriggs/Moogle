@@ -296,7 +296,6 @@ struct
     aux set 0
   
 
-
 (*
   let generate_random_dict (size: int) : set =
     let rec aux (size: int) (d: set) = 
@@ -310,13 +309,34 @@ struct
     	else aux (size - 1) (D.insert d size true)
 		in aux size D.empty 
 		*)
+
+  let rec generate_random_list (size: int) : elt list =
+    if size <= 0 then []
+    else (C.gen_random()) :: (generate_random_list (size - 1))
+
+
   let test_insert () =
 		let i = C.gen_random() in
+
     (* test inserting into empty set *)
     let s1 = insert i empty in
     assert(member s1 i) ;
     assert(size s1 = 1);
+
+    (* test that size of empty is 0*)
     assert(size empty = 0);
+
+    (* test that all elements in a randomly generated list are placed in the set *)
+    let randLs = generate_random_list 100 in
+    let s2 = List.fold_left (fun dict element -> insert element dict) empty randLs in
+    assert ((List.fold_left (fun dict element -> assert(D.member dict element); dict) s2 randLs) = s2);
+
+    (* test to make sure that inserting the same element twice doesn't change size of list *)
+    let s3 = insert i empty in
+    let s3' = insert i s3 in
+    assert (size s3' = 1);
+    assert (D.member s3' i);
+
     ()
 
   let test_remove () =
