@@ -257,7 +257,8 @@ struct
   let singleton k = D.insert D.empty k true
   let insert k d = D.insert d k true
   let union d1 d2 = 
-    if d1 = D.empty then d2 else D.fold (fun k v _ -> D.insert d2 k v) D.empty d1
+    if d1 = D.empty then d2 
+    else D.fold (fun k v _ -> D.insert d2 k v) D.empty d1
   let remove k d = D.remove d k
   let intersect d1 d2 = 
 		D.fold (fun k v d -> 
