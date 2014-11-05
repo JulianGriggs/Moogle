@@ -327,12 +327,15 @@ struct
     (* test that size of empty is 0*)
     assert(size empty = 0);
 
-    (* test that all elements in a randomly generated list are placed in the set *)
+    (* test that all elements in a randomly generated list are placed in 
+     * the set *)
     let randLs = generate_random_list 100 in
-    let s2 = List.fold_left (fun dict element -> insert element dict) empty randLs in
-    assert ((List.fold_left (fun dict element -> assert(D.member dict element); dict) s2 randLs) = s2);
+    let s2 = List.fold_left (fun d elt -> insert elt d) empty randLs in
+    assert ((List.fold_left 
+      (fun d elt -> assert(D.member d elt); d) s2 randLs) = s2);
 
-    (* test to make sure that inserting the same element twice doesn't change size of list *)
+    (* test to make sure that inserting the same element 
+     * twice doesn't change size of list *)
     let s3 = insert i empty in
     let s3' = insert i s3 in
     assert (size s3' = 1);
@@ -411,7 +414,8 @@ struct
 		let i = C.gen_random() in
 		let s1 = D.insert D.empty i true in
 		
-		(* test the set with one element and then that set with the element removed *)
+		(* test the set with one element and then that set with the element 
+     * removed *)
 		assert(not (is_empty s1)) ;
 		assert(is_empty (D.remove s1 i)) ;
     ()
