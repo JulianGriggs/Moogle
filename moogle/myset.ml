@@ -274,7 +274,7 @@ struct
 
   let fold f b = 
 		let f2 = (fun k _ d' -> f k d') in
-		D.fold f2 e
+		D.fold f2 b
 
   let string_of_elt = D.string_of_key
   let string_of_set s = D.string_of_dict s
@@ -286,9 +286,9 @@ struct
   (* comprehensive tests to test ALL your functions.              *)
   (****************************************************************)
 
-	let rec size (d: set) = 
-		fold (fun x y -> 1 + x) d
-
+	let rec size (d: set) : C.t = 
+		D.fold (fun _ _ d -> (C.gen_gt d)()) (C.gen()) d
+(*
   let generate_random_dict (size: int) : set =
     let rec aux (size: int) (d: set) = 
 			if size <= 0 then d
@@ -300,12 +300,12 @@ struct
 			if size <= 0 then d
     	else aux (size - 1) (D.insert d size true)
 		in aux size D.empty 
-		
-  let test_insert () =
+		*)
+  (*let test_insert () =
+		let i = C.gen_random() in
     (* test inserting into empty set *)
-    let s1 = insert 1 empty in
-    assert(member s1 1) ;
-		assert(size s1 = 1) ;
+    let s1 = insert i empty in
+    assert(member s1 i) ;
     ()
 
   let test_remove () =
@@ -313,7 +313,7 @@ struct
     let s1 = insert_list empty elts in
     let s2 = List.fold_right (fun k r -> remove k r) elts s1 in
     List.iter (fun k -> assert(not (member s2 k))) elts ;
-    ()
+    ()*)
 
   let test_union () =
     ()
@@ -365,10 +365,10 @@ IntListSet.run_tests();;
  * 
  * Uncomment out the lines below when you are ready to test your
  * 2-3 dict set implementation *)
-(*
+
 module IntDictSet = DictSet(IntComparable) ;;
 IntDictSet.run_tests();;
-*)
+
 
 
 (******************************************************************)
