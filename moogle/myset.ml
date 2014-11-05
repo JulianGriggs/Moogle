@@ -327,12 +327,15 @@ struct
     (* test that size of empty is 0*)
     assert(size empty = 0);
 
-    (* test that all elements in a randomly generated list are placed in the set *)
+    (* test that all elements in a randomly generated list are placed in 
+     * the set *)
     let randLs = generate_random_list 100 in
-    let s2 = List.fold_left (fun dict element -> insert element dict) empty randLs in
-    assert ((List.fold_left (fun dict element -> assert(D.member dict element); dict) s2 randLs) = s2);
+    let s2 = List.fold_left (fun d elt -> insert elt d) empty randLs in
+    assert ((List.fold_left 
+      (fun d elt -> assert(D.member d elt); d) s2 randLs) = s2);
 
-    (* test to make sure that inserting the same element twice doesn't change size of list *)
+    (* test to make sure that inserting the same element 
+     * twice doesn't change size of list *)
     let s3 = insert i empty in
     let s3' = insert i s3 in
     assert (size s3' = 1);
@@ -366,9 +369,58 @@ struct
     ()
 
   let test_intersect () =
+    let i0 = C.gen_random() in
+    let i1 = C.gen_gt i0 () in
+
+    (* test that intersection of disjoint sets is the empty set *)
+    let s0 = D.insert D.empty i0 true in
+    let s1 = D.insert D.empty i1 true in
+    assert (intersect s0 s1 = D.empty);
+
+    (* test that the intersection of sets containing the same items is equal
+     * to one of the sets *)
+    let s0' = D.insert s0 i1 true in
+    let s1' = D.insert s1 i0 true in
+    assert (intersect s0' s1' = s0' || intersect s0' s1' = s1');
+
+    (* test that the intersection of the empty set with the empty set is the 
+     * empty set *)
+    assert (intersect D.empty D.empty = D.empty);
+
+    (* test that the intersection between a non empty set and an empty set 
+     * is the empty set *)
+    assert (intersect D.empty s0 = D.empty);
+    assert (intersect s0 D.empty = D.empty);
+
     ()
 
   let test_member () =
+    let i = C.gen_random() in
+    let i' = C.gen_gt i () in
+    
+    (* test that an i that is added is a member *)
+    let s = D.insert D.empty i true in
+    assert(member s i);
+
+    (* test that an i' that has not been added is not a member *)
+    assert(not(member s i'));
+
+    (* test that after removing an item, it is no longer a member *)
+    let s' = D.remove s i in
+    assert(not(member s' i));
+
+    (* test that an i that is added to an empty set which used to have 
+     * a single member, is a member 
+     *)
+    let s'' = D.insert s' i' true in
+    assert(member s'' i');
+
+    (* test that an empty set has no members *)
+    assert((fun d -> 
+      match D.choose d with 
+      | None -> true 
+      | Some (_,_,_) -> false) D.empty);
+    
     ()
 
   let test_choose () =
@@ -409,7 +461,8 @@ struct
 		let i = C.gen_random() in
 		let s1 = D.insert D.empty i true in
 		
-		(* test the set with one element and then that set with the element removed *)
+		(* test the set with one element and then that set with the element 
+     * removed *)
 		assert(not (is_empty s1)) ;
 		assert(is_empty (D.remove s1 i)) ;
     ()
@@ -420,8 +473,10 @@ struct
     let s = singleton i in
     (* test that the size of a singleton is 1 *)
     assert (size s = 1); 
+
     (* test that the item added to the singleton is indeed in it *)
     assert (D.member s i);
+
     (* test that singleton's with the same item are indeed equal *)
     let s' = singleton i in
     assert(s = s');
