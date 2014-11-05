@@ -321,7 +321,7 @@ struct
 
     (* test inserting into empty set *)
     let s1 = insert i empty in
-    assert(member s1 i) ;
+    assert(D.member s1 i) ;
     assert(size s1 = 1);
 
     (* test that size of empty is 0*)
@@ -337,7 +337,6 @@ struct
     let s3' = insert i s3 in
     assert (size s3' = 1);
     assert (D.member s3' i);
-
     ()
 
   (* test the remove method *)
@@ -376,6 +375,19 @@ struct
     ()
 
   let test_singleton () =
+    let i = C.gen_random() in
+
+    let s = singleton i in
+    (* test that the size of a singleton is 1 *)
+    assert (size s = 1); 
+    (* test that the item added to the singleton is indeed in it *)
+    assert (D.member s i);
+    (* test that singleton's with the same item are indeed equal *)
+    let s' = singleton i in
+    assert(s = s');
+
+    (* test that singleton's with the same item are separate structures *)
+    assert(s != s');
     ()
 
   (* add your test functions to run_tests *)
