@@ -1,11 +1,11 @@
 (* NAMES:
  *
- * Partner 1's name: ______
- * Partner 1's login: _______
+ * Partner 1's name: Julian Griggs
+ * Partner 1's login: jgriggs
  *
  * (Leave blank if you are working alone)
- * Partner 2's name: ______
- * Partner 2's login: _______
+ * Partner 2's name: Cole McCracken
+ * Partner 2's login: cmccrack
  *)
 
 open Util ;;    
