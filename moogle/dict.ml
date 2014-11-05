@@ -274,7 +274,7 @@ end
 (* BTDict: a functor that implements our DICT signature           *)
 (* using a balanced tree (2-3 trees)                              *)
 (******************************************************************)
-(*
+
 module BTDict(D:DICT_ARG) : (DICT with type key = D.key
 with type value = D.value) =
 struct
@@ -357,8 +357,8 @@ struct
 
   (* TODO:
    * Implement these to-string functions *)
-  let string_of_key = raise TODO
-  let string_of_value = raise TODO
+  let string_of_key = (fun s -> "")
+  let string_of_value = (fun s -> "")
   let string_of_dict (d: dict) : string = raise TODO
       
   (* Debugging function. This will print out the tree in text format.
@@ -640,10 +640,25 @@ struct
 
   (* How are you testing that you tree is balanced? 
    * ANSWER: 
-   *    _______________
+   *    We first calculate the height of one branch of the tree, taking log(n)
+	 * time to do so.  We then traverse the entire tree keeping track of the 
+	 * depth and ensure that the depth is equal to the height any time we 
+	 * encounter a leaf, taking n time.  Therefore, our balanced function takes
+	 * n + log(n) time, or O(n)
    *)
-  let rec balanced (d: dict) : bool =
-    raise TODO
+  let balanced (d: dict) : bool =
+		let rec get_height (d: dict) : int = 
+			match d with 
+			| Leaf -> 0
+			| Two(d1,_,_) | Three(d1,_,_,_,_) -> 1 + get_height d1
+		in 
+		let rec aux (d: dict) (height: int) (depth: int) : bool = 
+			match d with 
+			| Leaf -> height = depth
+			| Two(d1,_,d2) -> (aux d1 height (depth+1)) && (aux d2 height (depth+1))
+			| Three(d1,_,d2,_,d3) -> (aux d1 height (depth+1)) 
+				&& (aux d2 height (depth+1)) && (aux d3 height (depth+1))
+		in aux d (get_height d) 0
 
 
   (********************************************************************)
@@ -676,7 +691,7 @@ struct
     else 
       (D.gen_key_random(), D.gen_value()) :: (generate_random_list (size - 1))
 
-(*
+
   let test_balance () =
     let d1 = Leaf in
     assert(balanced d1) ;
@@ -716,7 +731,7 @@ struct
                    D.gen_pair(),Leaf,D.gen_pair(),Two(Leaf,D.gen_pair(),Leaf))
     in
     assert(not (balanced d7)) ;
-    () *)
+    () 
 
 (*
   let test_remove_nothing () =
@@ -774,7 +789,7 @@ struct
     () *)
 
   let run_tests () = 
-(*    test_balance() ; *)
+    test_balance() ; 
 (*    test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
@@ -783,7 +798,7 @@ struct
     ()
 
 end
-*)
+
 
 
 
@@ -793,6 +808,7 @@ end
 
 (* Create a dictionary mapping ints to strings using our 
  * AssocListDict functor and run the tests *)
+
 module IntStringListDict = AssocListDict(IntStringDictArg) ;;
 IntStringListDict.run_tests();;
 
@@ -801,10 +817,10 @@ IntStringListDict.run_tests();;
  * 
  * Uncomment out the lines below when you are ready to test your
  * 2-3 tree implementation. *)
-(*
+
 module IntStringBTDict = BTDict(IntStringDictArg) ;;
 IntStringBTDict.run_tests();;
-*)
+
 
 
 
@@ -816,6 +832,6 @@ module Make (D:DICT_ARG) : (DICT with type key = D.key
   with type value = D.value) = 
   (* Change this line to the BTDict implementation when you are
    * done implementing your 2-3 trees. *)
-  AssocListDict(D)
-  (* BTDict(D) *)
+  AssocListDict(D) 
+(*  BTDict(D) *)
 

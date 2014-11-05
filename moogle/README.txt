@@ -16,3 +16,8 @@ Problems or Issues or Difficulties with the Assignment:
 
 Suggestions for the Future or Random Comments:
 ----------------------------------------------
+
+
+THINGS TO GO BACK TO:
+string_of_key, string_of_value implementations
+fold testing in part 2

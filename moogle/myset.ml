@@ -252,15 +252,21 @@ struct
 	
 	(* INVARIANT: sorted, no duplicates *)
   let empty = D.empty
-  let is_empty d = 
+  
+	let is_empty d = 
 		D.fold (fun _ _ size -> size + 1) 0 d = 0
-  let singleton k = D.insert D.empty k true
-  let insert k d = D.insert d k true
-  let union d1 d2 = 
+  
+	let singleton k = D.insert D.empty k true
+  
+	let insert k d = D.insert d k true
+  
+	let union d1 d2 = 
     if d1 = D.empty then d2 
     else D.fold (fun k v _ -> D.insert d2 k v) D.empty d1
-  let remove k d = D.remove d k
-  let intersect d1 d2 = 
+  
+	let remove k d = D.remove d k
+  
+	let intersect d1 d2 = 
 		D.fold (fun k v d -> 
 			if D.member d2 k then D.insert d k v else d) D.empty d1
 
@@ -270,9 +276,6 @@ struct
 		match D.choose d with 
 		| None -> None
 		| Some (k,_,set) -> Some (k,set)
-  
-	(*val fold : (key -> value -> 'a -> 'a) -> 'a -> dict -> 'a*)
- (* val fold : (elt -> 'a -> 'a) -> 'a -> set -> 'a *)
 
   let fold f b = 
 		let f2 = (fun k _ d' -> f k d') in
@@ -474,7 +477,6 @@ struct
 		| Some (k,d) -> assert(size d = 99) ; assert (not (D.member d k)) ;
     ()
 
-  (* TEST MORE THOROUGHLY *)
   let test_fold () =
 		
 		let zero = C.gen() in 
