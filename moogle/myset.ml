@@ -369,6 +369,29 @@ struct
     ()
 
   let test_intersect () =
+    let i0 = C.gen_random() in
+    let i1 = C.gen_gt i0 () in
+
+    (* test that intersection of disjoint sets is the empty set *)
+    let s0 = D.insert D.empty i0 true in
+    let s1 = D.insert D.empty i1 true in
+    assert (intersect s0 s1 = D.empty);
+
+    (* test that the intersection of sets containing the same items is equal
+     * to one of the sets *)
+    let s0' = D.insert s0 i1 true in
+    let s1' = D.insert s1 i0 true in
+    assert (intersect s0' s1' = s0' || intersect s0' s1' = s1');
+
+    (* test that the intersection of the empty set with the empty set is the 
+     * empty set *)
+    assert (intersect D.empty D.empty = D.empty);
+
+    (* test that the intersection between a non empty set and an empty set 
+     * is the empty set *)
+    assert (intersect D.empty s0 = D.empty);
+    assert (intersect s0 D.empty = D.empty);
+
     ()
 
   let test_member () =
