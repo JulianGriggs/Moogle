@@ -424,6 +424,7 @@ struct
 		let zero = C.gen() in 
 		let one = C.gen_gt zero () in
 		
+		(* s1 : {1} *)
 		let s1 = D.insert D.empty one true in 
 		
 		(* choose from list only containing {1} *)
@@ -441,8 +442,22 @@ struct
 		| Some (k,d) -> assert(size d = 99) ; assert (not (D.member d k)) ;
     ()
 
+  (* TEST MORE THOROUGHLY *)
   let test_fold () =
-		(*let fold_size = fold*)
+		
+		let zero = C.gen() in 
+		let one = C.gen_gt zero () in
+		
+		(* s1 : {1} *)
+		let s1 = D.insert D.empty one true in 
+		(* s2 : {1,2,3...100} *)
+		let s2 = generate_consecutive_dict 100 in 
+		
+		(* test folding with size vs our implementation of size *)
+		let fold_size_s1 = fold (fun x y -> C.gen_gt y ()) (C.gen()) s1 in
+		let fold_size_s2 = fold (fun x y -> C.gen_gt y ()) (C.gen()) s2 in
+		assert(int_of_string (C.string_of_t (fold_size_s1)) = size s1) ;
+		assert(int_of_string (C.string_of_t (fold_size_s2)) = size s2) ;		
     ()
 
   let test_is_empty () =
