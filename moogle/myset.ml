@@ -369,6 +369,32 @@ struct
     ()
 
   let test_member () =
+    let i = C.gen_random() in
+    let i' = C.gen_gt i () in
+    
+    (* test that an i that is added is a member *)
+    let s = D.insert D.empty i true in
+    assert(member s i);
+
+    (* test that an i' that has not been added is not a member *)
+    assert(not(member s i'));
+
+    (* test that after removing an item, it is no longer a member *)
+    let s' = D.remove s i in
+    assert(not(member s' i));
+
+    (* test that an i that is added to an empty set which used to have 
+     * a single member, is a member 
+     *)
+    let s'' = D.insert s' i' true in
+    assert(member s'' i');
+
+    (* test that an empty set has no members *)
+    assert((fun d -> 
+      match D.choose d with 
+      | None -> true 
+      | Some (_,_,_) -> false) D.empty);
+    
     ()
 
   let test_choose () =
@@ -386,8 +412,10 @@ struct
     let s = singleton i in
     (* test that the size of a singleton is 1 *)
     assert (size s = 1); 
+
     (* test that the item added to the singleton is indeed in it *)
     assert (D.member s i);
+
     (* test that singleton's with the same item are indeed equal *)
     let s' = singleton i in
     assert(s = s');
