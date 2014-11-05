@@ -372,6 +372,30 @@ struct
     ()
 
   let test_choose () =
+		
+		(* choose from empty list *)
+		assert(choose D.empty = None) ;
+		
+		let zero = C.gen() in 
+		let one = C.gen_gt zero () in
+		let i = C.gen_random() in
+		
+		let s1 = D.insert D.empty one true in 
+		
+		(* choose from list only containing {1} *)
+		match choose s1 with 
+		| None -> assert (false) ;
+		| Some (k,d) -> assert (k = one) ; assert (d = D.empty) ;
+		
+		(* s2 : {1,2,3...100} *)
+		let s2 = generate_consecutive_dict 100 in 
+		
+		(* choose from list of s2 *)
+		let c2 = choose s2 in 
+		match c2 with 
+		| None -> assert (false) ;
+		| Some (k,d) -> assert(size d = 99) ;
+		
     ()
 
   let test_fold () =
