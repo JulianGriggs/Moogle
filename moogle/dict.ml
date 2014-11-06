@@ -353,13 +353,19 @@ struct
   (* TODO:
    * Implement fold. Read the specification in the DICT signature above. *)
   let rec fold (f: key -> value -> 'a -> 'a) (u: 'a) (d: dict) : 'a =
-    raise TODO
-
+    match d with
+      | Leaf -> u
+      | Two (left, (k, v), right) -> f k v (fold f (fold f u left) right) 
+      | Three (left, (k1, v1), mid, (k2, v2), right) -> 
+        f k1 v1 (fold f (f k2 v2 (fold f (fold f u left) mid)) right)
   (* TODO:
    * Implement these to-string functions *)
-  let string_of_key = (fun s -> "")
-  let string_of_value = (fun s -> "")
-  let string_of_dict (d: dict) : string = raise TODO
+  let string_of_key = D.string_of_key
+  let string_of_value = D.string_of_value
+  let string_of_dict (d: dict) : string = 
+      let f = (fun k v y -> y ^ "\n key: " ^ D.string_of_key k ^ 
+      "; value: (" ^ D.string_of_value v ^ ")") in
+    fold f "" d
       
   (* Debugging function. This will print out the tree in text format.
    * Use this function to see the actual structure of your 2-3 tree. *
@@ -733,6 +739,54 @@ struct
     assert(not (balanced d7)) ;
     () 
 
+  let test_fold () =
+  let min k v b = if D.compare k b = Less then k else b in
+  let max k v b = if D.compare k b = Greater then k else b in
+
+    (* Used for testing.  key0 < key1 < key2 < key3 *)
+    let smallest_key = D.gen_key() in 
+    let key1 = D.gen_key_gt smallest_key () in
+    let key2 = D.gen_key_gt key1 () in
+    let key3 = D.gen_key_gt key2 () in
+    let key4 = D.gen_key_gt key3 () in
+    let key5 = D.gen_key_gt key4 () in
+    let biggest_key = D.gen_key_gt key5 () in
+    let pair1 = (key1, D.gen_value()) in
+    let pair2 = (key2, D.gen_value()) in
+    let pair3 = (key3, D.gen_value()) in
+    let pair4 = (key4, D.gen_value()) in
+    let pair5 = (key5, D.gen_value()) in
+
+    (* test that in an empty dict, fold returns the base case *)
+    let d1 = Leaf in
+    assert(fold min smallest_key d1 = smallest_key) ;
+
+    (* test that in a tree with one key, key1, that k1 is the minimum *)
+    let d2 = Two(Leaf,pair1,Leaf) in
+    assert(fold min biggest_key d2 = key1) ;
+    (* test that in a tree with one key, key1, that k1 is the maximum *)
+    assert(fold max smallest_key d2 = key1) ;
+
+    let d3 = Three(Leaf,pair1,Leaf,pair2,Leaf) in
+    (* test that in a tree with two keys, key1 and key2, k1 is the minimum *)
+    assert(fold min biggest_key d3 = key1 ) ;
+    (* test that in a tree with two keys, key1 and key2, k2 is the maximum *)
+    assert(fold max smallest_key d3 = key2 ) ;
+
+    let d4 = Two(Leaf,pair1,Two(Leaf,pair2,Leaf)) in
+    assert(fold min biggest_key d4 = key1 ) ;
+    assert(fold max smallest_key d4 = key2 ) ;
+
+    let d5 = Three(Leaf,pair1,
+                   Two(Leaf,pair2,Leaf),pair3,Leaf) in
+    assert(fold min biggest_key d5 = key1 ) ;
+    assert(fold max smallest_key d5 = key3 ) ;
+
+    let d6 = Three(Three(Leaf,pair1,Leaf,pair2,Leaf),
+                   pair3,Leaf,pair4,Two(Leaf,pair5,Leaf)) in
+    assert(fold min biggest_key d6 = key1 ) ;
+    assert(fold max smallest_key d6 = key5 ) ;
+    ()
 (*
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
@@ -790,6 +844,7 @@ struct
 
   let run_tests () = 
     test_balance() ; 
+    test_fold();
 (*    test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
