@@ -623,12 +623,25 @@ struct
    * in our dictionary and returns it as an option, or return None
    * if the key is not in our dictionary. *)
   let rec lookup (d: dict) (k: key) : value option =
-    raise TODO
+		match d with 
+		| Leaf -> None
+		| Two(left, (key,value), right) -> 
+			(match D.compare k key with
+			| Less -> lookup left k
+			| Eq -> Some value
+			| Greater -> lookup right k)
+	  | Three(left, (k1,v1), mid, (k2,v2), right) -> 
+			(match D.compare k k1, D.compare k k2 with 
+			| Less, _ -> lookup left k
+			| Eq, _ -> Some v1
+			| Greater, Less -> lookup mid k
+			| Greater, Eq -> Some v2
+			| Greater, Greater -> lookup right k)
 
   (* TODO:
    * Write a function to test if a given key is in our dictionary *)
   let member (d: dict) (k: key) : bool =
-    raise TODO
+   	lookup d k != None
 
   (* TODO:
    * Write a function that removes any (key,value) pair from our 
@@ -656,14 +669,15 @@ struct
 		let rec get_height (d: dict) : int = 
 			match d with 
 			| Leaf -> 0
-			| Two(d1,_,_) | Three(d1,_,_,_,_) -> 1 + get_height d1
+			| Two(left,_,_) | Three(left,_,_,_,_) -> 1 + get_height left
 		in 
 		let rec aux (d: dict) (height: int) (depth: int) : bool = 
 			match d with 
 			| Leaf -> height = depth
-			| Two(d1,_,d2) -> (aux d1 height (depth+1)) && (aux d2 height (depth+1))
-			| Three(d1,_,d2,_,d3) -> (aux d1 height (depth+1)) 
-				&& (aux d2 height (depth+1)) && (aux d3 height (depth+1))
+			| Two(left,_,right) -> (aux left height (depth+1)) 
+				&& (aux right height (depth+1))
+			| Three(left,_,mid,_,right) -> (aux left height (depth+1)) 
+				&& (aux mid height (depth+1)) && (aux right height (depth+1))
 		in aux d (get_height d) 0
 
 
@@ -673,6 +687,10 @@ struct
   (* below as an example                                              *)
   (********************************************************************)
 
+  (* Used for testing.  key0 < key1 < key2 < key3 *)
+	(*let setup_tests () = *)
+
+  (*()*)
   (* adds a list of (key,value) pairs in left-to-right order *)
   let insert_list (d: dict) (lst: (key * value) list) : dict = 
     List.fold_left (fun r (k,v) -> insert r k v) d lst
@@ -739,54 +757,136 @@ struct
     assert(not (balanced d7)) ;
     () 
 
-  let test_fold () =
-  let min k v b = if D.compare k b = Less then k else b in
-  let max k v b = if D.compare k b = Greater then k else b in
+  let smallest_key = D.gen_key()  
+	let key1 = D.gen_key_gt smallest_key () 
+ 	let key2 = D.gen_key_gt key1 () 
+ 	let key3 = D.gen_key_gt key2 () 
+ 	let key4 = D.gen_key_gt key3 () 
+ 	let key5 = D.gen_key_gt key4 () 
+ 	let biggest_key = D.gen_key_gt key5 () 	
+	let val1 = D.gen_value() 	
+	let val2 = D.gen_value() 
+	let val3 = D.gen_value() 
+	let val4 = D.gen_value() 
+	let val5 = D.gen_value() 
+  let pair1 = (key1, val1) 
+ 	let pair2 = (key2, val2) 
+ 	let pair3 = (key3, val3) 
+ 	let pair4 = (key4, val4) 
+ 	let pair5 = (key5, val5) 
 
-    (* Used for testing.  key0 < key1 < key2 < key3 *)
-    let smallest_key = D.gen_key() in 
-    let key1 = D.gen_key_gt smallest_key () in
-    let key2 = D.gen_key_gt key1 () in
-    let key3 = D.gen_key_gt key2 () in
-    let key4 = D.gen_key_gt key3 () in
-    let key5 = D.gen_key_gt key4 () in
-    let biggest_key = D.gen_key_gt key5 () in
-    let pair1 = (key1, D.gen_value()) in
-    let pair2 = (key2, D.gen_value()) in
-    let pair3 = (key3, D.gen_value()) in
-    let pair4 = (key4, D.gen_value()) in
-    let pair5 = (key5, D.gen_value()) in
+ 	let d_leaf = Leaf 
+ 	let d_2 = Two(Leaf,pair1,Leaf) 
+ 	let d_3 = Three(Leaf,pair1,Leaf,pair2,Leaf) 
+ 	let d_2_2 = Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)) 
+ 	let d_3_2 = Three(Two(Leaf,pair1,Leaf),pair2,
+                Two(Leaf,pair3,Leaf),pair4,Two(Leaf,pair5,Leaf)) 
+ 	let d_2_3 = Two(Three(Leaf,pair1,Leaf,pair2,Leaf),
+                pair3,Three(Leaf,pair4,Leaf,pair5,Leaf)) 
+								
+  let test_fold () =
+  	let min k v b = if D.compare k b = Less then k else b in
+  	let max k v b = if D.compare k b = Greater then k else b in
 
     (* test that in an empty dict, fold returns the base case *)
-    let d1 = Leaf in
-    assert(fold min smallest_key d1 = smallest_key) ;
+    assert(fold min smallest_key d_leaf = smallest_key) ;
 
     (* test that in a tree with one key, key1, that k1 is the minimum *)
-    let d2 = Two(Leaf,pair1,Leaf) in
-    assert(fold min biggest_key d2 = key1) ;
+    assert(fold min biggest_key d_2 = key1) ;
     (* test that in a tree with one key, key1, that k1 is the maximum *)
-    assert(fold max smallest_key d2 = key1) ;
+    assert(fold max smallest_key d_2 = key1) ;
 
-    let d3 = Three(Leaf,pair1,Leaf,pair2,Leaf) in
     (* test that in a tree with two keys, key1 and key2, k1 is the minimum *)
-    assert(fold min biggest_key d3 = key1 ) ;
+    assert(fold min biggest_key d_3 = key1 ) ;
     (* test that in a tree with two keys, key1 and key2, k2 is the maximum *)
-    assert(fold max smallest_key d3 = key2 ) ;
+    assert(fold max smallest_key d_3 = key2 ) ;
 
-    let d4 = Two(Leaf,pair1,Two(Leaf,pair2,Leaf)) in
-    assert(fold min biggest_key d4 = key1 ) ;
-    assert(fold max smallest_key d4 = key2 ) ;
+		(* test smallest in 2 of 2s is key1, largest is key3 *)
+    assert(fold min biggest_key d_2_2 = key1 ) ;
+    assert(fold max smallest_key d_2_2 = key3 ) ;
 
-    let d5 = Three(Leaf,pair1,
-                   Two(Leaf,pair2,Leaf),pair3,Leaf) in
-    assert(fold min biggest_key d5 = key1 ) ;
-    assert(fold max smallest_key d5 = key3 ) ;
+		(* test smallest in 3 of 2s is key1, largest is key5 *)
+    assert(fold min biggest_key d_3_2 = key1 ) ;
+    assert(fold max smallest_key d_3_2 = key5 ) ;
 
-    let d6 = Three(Three(Leaf,pair1,Leaf,pair2,Leaf),
-                   pair3,Leaf,pair4,Two(Leaf,pair5,Leaf)) in
-    assert(fold min biggest_key d6 = key1 ) ;
-    assert(fold max smallest_key d6 = key5 ) ;
+		(* test smallest in 2 of 3s is key1, largest is key5 *)
+    assert(fold min biggest_key d_2_3 = key1 ) ;
+    assert(fold max smallest_key d_2_3 = key5 ) ;
     ()
+		
+	let test_lookup () = 
+		
+		(* test that in an empty dict, lookup returns None *)
+    assert(lookup d_leaf key1 = None) ;
+		
+		(* test lookup in a Two *)
+    assert(lookup d_2 key1 = Some val1) ;
+    assert(lookup d_2 key2 = None) ;
+		
+    (* test lookup in a Three *)
+    assert(lookup d_3 key1 = Some val1) ;
+    assert(lookup d_3 key2 = Some val2) ;
+		assert(lookup d_3 key3 = None) ;	
+		
+		(* test lookup in a 2 of 2s *)
+		assert(lookup d_2_2 key1 = Some val1) ;
+    assert(lookup d_2_2 key2 = Some val2) ;
+		assert(lookup d_2_2 key3 = Some val3) ;
+		assert(lookup d_2_2 key4 = None) ;
+		
+		(* test lookup in a 3 of 2s *)
+		assert(lookup d_3_2 key1 = Some val1) ;
+    assert(lookup d_3_2 key2 = Some val2) ;
+		assert(lookup d_3_2 key3 = Some val3) ;
+		assert(lookup d_3_2 key4 = Some val4) ;
+		assert(lookup d_3_2 key5 = Some val5) ;
+		assert(lookup d_3_2 smallest_key = None) ;
+		
+		(* test lookup in a 3 of 2s *)
+		assert(lookup d_2_3 key1 = Some val1) ;
+    assert(lookup d_2_3 key2 = Some val2) ;
+		assert(lookup d_2_3 key3 = Some val3) ;
+		assert(lookup d_2_3 key4 = Some val4) ;
+		assert(lookup d_2_3 key5 = Some val5) ;
+		assert(lookup d_2_3 smallest_key = None) ;
+		()
+			
+	let test_member () = 
+		
+		(* test that in an empty dict, member returns None *)
+    assert(not(member d_leaf key1)) ;
+		
+		(* test member in a Two *)
+    assert(member d_2 key1) ;
+    assert(not(member d_2 key2)) ;
+		
+    (* test member in a Three *)
+    assert(member d_3 key1) ;
+    assert(member d_3 key2) ;
+		assert(not(member d_3 key3)) ;	
+		
+		(* test member in a 2 of 2s *)
+		assert(member d_2_2 key1) ;
+    assert(member d_2_2 key2) ;
+		assert(member d_2_2 key3) ;
+		assert(not(member d_2_2 key4)) ;
+		
+		(* test member in a 3 of 2s *)
+		assert(member d_3_2 key1) ;
+    assert(member d_3_2 key2) ;
+		assert(member d_3_2 key3) ;
+		assert(member d_3_2 key4) ;
+		assert(member d_3_2 key5) ;
+		assert(not(member d_3_2 smallest_key)) ;
+		
+		(* test member in a 3 of 2s *)
+		assert(member d_2_3 key1) ;
+    assert(member d_2_3 key2) ;
+		assert(member d_2_3 key3) ;
+		assert(member d_2_3 key4) ;
+		assert(member d_2_3 key5) ;
+		assert(not(member d_2_3 smallest_key)) ;
+		()
 (*
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
@@ -844,7 +944,9 @@ struct
 
   let run_tests () = 
     test_balance() ; 
-    test_fold();
+    test_fold() ;
+		test_lookup () ;
+		test_member () ;
 (*    test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
