@@ -482,12 +482,12 @@ struct
 		| Less -> 
 			(match insert_downward left k v with 
 			| Up(l,(k',v'),r) -> insert_upward_two (k',v') l r (k1,v1) right
-			| Done x -> Done x)
+			| Done x -> Done(Two(x,(k1,v1),right)))
 		| Eq -> Done(Two(left,(k,v),right))
 		| Greater -> 
-			(match insert_downward left k v with 
+			(match insert_downward right k v with 
 			| Up(l,(k',v'),r) -> insert_upward_two (k',v') l r (k1,v1) left
-			| Done x -> Done x)
+			| Done x -> Done(Two(left,(k1,v1),x)))
 		
 
   (* Downward phase on a Three node. (k,v) is the (key,value) we are inserting,
@@ -500,19 +500,19 @@ struct
 			(match insert_downward left k v with 
 			| Up(l,(k',v'),r) -> 
 				insert_upward_three (k',v') l r (k1,v1) (k2,v2) middle right
-			| Done x -> Done x)
+			| Done x -> Done(Three(x,(k1,v1),middle,(k2,v2),right)))
 		| Eq, _ -> Done(Three(left, (k,v), middle, (k2,v2), right))
 		| Greater, Less -> 
 			(match insert_downward middle k v with 
 			| Up(l,(k',v'),r) -> 
 				insert_upward_three (k',v') l r (k1,v1) (k2,v2) left right
-			| Done x -> Done x)
+			| Done x -> Done(Three(left,(k1,v1),x,(k2,v2),right)))
 		| Greater, Eq -> Done(Three(left, (k1,v1), middle, (k,v), right))
 		| Greater, Greater -> 			
 			(match insert_downward right k v with 
 			| Up(l,(k',v'),r) -> 
 				insert_upward_three (k',v') l r (k1,v1) (k2,v2) left middle
-			| Done x -> Done x)
+			| Done x -> Done(Three(left,(k1,v1),middle,(k2,v2),x)))
 
   (* We insert (k,v) into our dict using insert_downward, which gives us
    * "kicked" up configuration. We return the tree contained in the "kicked"
@@ -955,36 +955,51 @@ struct
 		(* test insert new key into a two *)
 		let ret = insert d_2 key2 val2 in 
 		assert(balanced ret) ;
+		assert(member ret key1) ;
 		assert(member ret key2) ;
 		
 		
 		(* test insert new key into a three *)
 		let ret = insert d_3 key3 val3 in 
 		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(member ret key2) ;
 		assert(member ret key3) ;
 		
 		(* test insert new key into a two of twos *)
 		let ret = insert d_2_2 key4 val4 in 
 		assert(balanced ret) ;
+		assert(member ret key1) ;
 		assert(member ret key4) ;
+		assert(member ret key2) ;
+		assert(member ret key3) ;
+
 		
 		(* test insert new key into a two of threes *)
 		let ret = insert d_2_3 key6 val6 in 
 		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(member ret key2) ;
+		assert(member ret key3) ;
+		assert(member ret key4) ;
+		assert(member ret key5) ;		
 		assert(member ret key6) ;				
 
 		(* test insert new key into a three of twos *)
 		let ret = insert d_3_2 key6 val6 in 
 		assert(balanced ret) ;
-		assert(member ret key6) ;		
+		assert(member ret key1) ;
+		assert(member ret key2) ;
+		assert(member ret key3) ;
+		assert(member ret key4) ;
+		assert(member ret key5) ;		
+		assert(member ret key6) ;			
 		()
 
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
-    let d1 = insert_list_reversed empty pairs1 in
-		print_endline (string_of_tree d1) ;
+    let d1 = insert_list empty pairs1 in
     let r2 = remove d1 (D.gen_key_lt (D.gen_key()) ()) in
-		print_endline (string_of_tree r2) ;
     List.iter (fun (k,v) -> assert(lookup r2 k = Some v)) pairs1 ;
     assert(balanced r2) ;
     ()
@@ -999,9 +1014,13 @@ struct
   let test_remove_in_order () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
+		print_endline (string_of_tree d1) ;
+		print_endline "*************************************" ;
     List.iter 
       (fun (k,v) -> 
         let r = remove d1 k in
+				print_endline (string_of_tree r) ;
+						print_endline "*************************************" ;
         let _ = List.iter 
           (fun (k2,v2) ->
             if k = k2 then assert(lookup r k2 = None)
@@ -1040,6 +1059,7 @@ struct
     test_fold() ;
 		test_lookup () ;
 		test_member () ;
+		test_insert () ;
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
