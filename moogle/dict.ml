@@ -627,16 +627,16 @@ struct
 		| Leaf -> None
 		| Two(left, (key,value), right) -> 
 			(match D.compare k key with
-			| Less -> lookup left k
-			| Eq -> Some value
-			| Greater -> lookup right k)
+			 | Less -> lookup left k
+			 | Eq -> Some value
+			 | Greater -> lookup right k)
 	  | Three(left, (k1,v1), mid, (k2,v2), right) -> 
 			(match D.compare k k1, D.compare k k2 with 
-			| Less, _ -> lookup left k
-			| Eq, _ -> Some v1
-			| Greater, Less -> lookup mid k
-			| Greater, Eq -> Some v2
-			| Greater, Greater -> lookup right k)
+			 | Less, _ -> lookup left k
+			 | Eq, _ -> Some v1
+			 | Greater, Less -> lookup mid k
+			 | Greater, Eq -> Some v2
+			 | Greater, Greater -> lookup right k)
 
   (* TODO:
    * Write a function to test if a given key is in our dictionary *)
