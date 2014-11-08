@@ -531,9 +531,9 @@ struct
       (left: dict) (right: dict) (dir: direction2) : hole =
     match dir,n,left,right with
       | Left2,x,l,Two(m,y,r) -> Hole(rem,Three(l,x,m,y,r))
-      | Right2,y,Two(l,x,m),r -> raise TODO
-      | Left2,x,a,Three(b,y,c,z,d) -> raise TODO
-      | Right2,z,Three(a,x,b,y,c),d -> raise TODO
+      | Right2,y,Two(l,x,m),r -> Hole(rem,Three(l,x,m,y,r))
+      | Left2,x,a,Three(b,y,c,z,d) -> Hole(rem,Two(Two(a,x,b),y,Two(c,z,d)))
+      | Right2,z,Three(a,x,b,y,c),d -> Hole(rem,Two(Two(a,x,b),y,Two(c,z,d)))
       | Left2,_,_,_ | Right2,_,_,_ -> Absorbed(rem,Two(Leaf,n,Leaf))
 
   (* Upward phase for removal where the parent of the hole is a Three node.
@@ -545,13 +545,17 @@ struct
       (left: dict) (middle: dict) (right: dict) (dir: direction3) : hole =
     match dir,n1,n2,left,middle,right with
       | Left3,x,z,a,Two(b,y,c),d -> Absorbed(rem,Two(Three(a,x,b,y,c),z,d))
-      | Mid3,y,z,Two(a,x,b),c,d -> raise TODO
-      | Mid3,x,y,a,b,Two(c,z,d) -> raise TODO
-      | Right3,x,z,a,Two(b,y,c),d -> raise TODO
-      | Left3,w,z,a,Three(b,x,c,y,d),e -> raise TODO
-      | Mid3,y,z,Three(a,w,b,x,c),d,e -> raise TODO
-      | Mid3,w,x,a,b,Three(c,y,d,z,e) -> raise TODO
-      | Right3,w,z,a,Three(b,x,c,y,d),e -> raise TODO
+      | Mid3,y,z,Two(a,x,b),c,d -> Absorbed(rem,Two(Three(a,x,b,y,c),z,d))
+      | Mid3,x,y,a,b,Two(c,z,d) -> Absorbed(rem,Two(a,x,Three(b,y,c,z,d)))
+      | Right3,x,z,a,Two(b,y,c),d -> Absorbed(rem,Two(a,x,Three(b,y,c,z,d)))
+      | Left3,w,z,a,Three(b,x,c,y,d),e -> 
+				Absorbed(rem,Three(Two(a,w,b),x,Two(c,y,d),z,e))
+      | Mid3,y,z,Three(a,w,b,x,c),d,e -> 
+				Absorbed(rem,Three(Two(a,w,b),x,Two(c,y,d),z,e))
+      | Mid3,w,x,a,b,Three(c,y,d,z,e) -> 
+				Absorbed(rem,Three(a,w,Two(b,x,c),y,Two(d,z,e)))
+      | Right3,w,z,a,Three(b,x,c,y,d),e -> 
+				Absorbed(rem,Three(a,w,Two(b,x,c),y,Two(d,z,e)))
       | Left3,_,_,_,_,_ | Mid3,_,_,_,_,_ | Right3,_,_,_,_,_ ->
         Absorbed(rem,Three(Leaf,n1,Leaf,n2,Leaf))
 
@@ -808,17 +812,20 @@ struct
  	let key3 = D.gen_key_gt key2 () 
  	let key4 = D.gen_key_gt key3 () 
  	let key5 = D.gen_key_gt key4 () 
+	let key6 = D.gen_key_gt key5 ()
  	let biggest_key = D.gen_key_gt key5 () 	
 	let val1 = D.gen_value() 	
 	let val2 = D.gen_value() 
 	let val3 = D.gen_value() 
 	let val4 = D.gen_value() 
 	let val5 = D.gen_value() 
+	let val6 = D.gen_value()
   let pair1 = (key1, val1) 
  	let pair2 = (key2, val2) 
  	let pair3 = (key3, val3) 
  	let pair4 = (key4, val4) 
  	let pair5 = (key5, val5) 
+	let pair6 = (key6, val6)
 
  	let d_leaf = Leaf 
  	let d_2 = Two(Leaf,pair1,Leaf) 
@@ -932,11 +939,52 @@ struct
 		assert(member d_2_3 key5) ;
 		assert(not(member d_2_3 smallest_key)) ;
 		()
-(*
+		
+	let test_insert () = 
+		(* test insert into empty dict *)
+		let ret = insert d_leaf key1 val1 in 
+		assert(balanced ret) ;
+		assert(member ret key1) ;
+		
+		(* test insert overwrite into a two *)
+		let ret = insert d_2 key1 val2 in 
+		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(lookup ret key1 = Some val2) ;
+		
+		(* test insert new key into a two *)
+		let ret = insert d_2 key2 val2 in 
+		assert(balanced ret) ;
+		assert(member ret key2) ;
+		
+		
+		(* test insert new key into a three *)
+		let ret = insert d_3 key3 val3 in 
+		assert(balanced ret) ;
+		assert(member ret key3) ;
+		
+		(* test insert new key into a two of twos *)
+		let ret = insert d_2_2 key4 val4 in 
+		assert(balanced ret) ;
+		assert(member ret key4) ;
+		
+		(* test insert new key into a two of threes *)
+		let ret = insert d_2_3 key6 val6 in 
+		assert(balanced ret) ;
+		assert(member ret key6) ;				
+
+		(* test insert new key into a three of twos *)
+		let ret = insert d_3_2 key6 val6 in 
+		assert(balanced ret) ;
+		assert(member ret key6) ;		
+		()
+
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
-    let d1 = insert_list empty pairs1 in
+    let d1 = insert_list_reversed empty pairs1 in
+		print_endline (string_of_tree d1) ;
     let r2 = remove d1 (D.gen_key_lt (D.gen_key()) ()) in
+		print_endline (string_of_tree r2) ;
     List.iter (fun (k,v) -> assert(lookup r2 k = Some v)) pairs1 ;
     assert(balanced r2) ;
     ()
@@ -985,18 +1033,18 @@ struct
     List.iter (fun (k,_) -> assert(not (member r5 k))) pairs5 ;
     assert(r5 = empty) ;
     assert(balanced r5) ;
-    () *)
+    () 
 
   let run_tests () = 
     test_balance() ; 
     test_fold() ;
 		test_lookup () ;
 		test_member () ;
-(*    test_remove_nothing() ;
+    test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
     test_remove_reverse_order() ;
-    test_remove_random_order() ; *)
+    test_remove_random_order() ; 
     ()
 
 end
