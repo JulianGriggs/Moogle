@@ -4,6 +4,7 @@
  * a set of URLs with each word that we find as we crawl the web.
  *)
 exception TODO
+exception WrongLogic
 
 module type DICT = 
 sig
@@ -399,7 +400,13 @@ struct
    * result of performing the upward phase on w. *)
   let insert_upward_two (w: pair) (w_left: dict) (w_right: dict) 
       (x: pair) (x_other: dict) : kicked = 
-    raise TODO
+    let (xk, _) = x in 
+		let (wk, _) = w in 
+		match D.compare wk xk with 
+		| Less -> Done(Three(w_left, w, w_right, x, x_other))
+		| Eq -> raise WrongLogic
+		| Greater -> Done(Three(x_other, x, w_left, w, w_right))
+		
 
   (* Upward phase for w where its parent is a Three node whose (key,value) is x.
    * One of x's children is w, and of the two remaining children, 
@@ -415,7 +422,17 @@ struct
    * new tree as a result of performing the upward phase on w. *)
   let insert_upward_three (w: pair) (w_left: dict) (w_right: dict)
       (x: pair) (y: pair) (other_left: dict) (other_right: dict) : kicked =
-    raise TODO
+    let (xk, _) = x in 
+		let (yk, _) = y in
+		let (wk, _) = w in 
+		match D.compare wk xk, D.compare wk yk with 
+		| Less, _ -> Up(Two(w_left,w,w_right),x,Two(other_left,y,other_right))
+		| Eq, _ -> raise WrongLogic
+		| Greater, Less -> 
+			Up(Two(other_left,x,w_left),w,Two(w_right,y,other_right))
+		| Greater, Eq -> raise WrongLogic
+		| Greater, Greater ->
+			Up(Two(other_left,x,other_right),y,Two(w_left,w,w_right))
 
   (* Downward phase for inserting (k,v) into our dictionary d. 
    * The downward phase returns a "kicked" up configuration, where
@@ -452,8 +469,9 @@ struct
   let rec insert_downward (d: dict) (k: key) (v: value) : kicked =
     match d with
       | Leaf -> Up(Leaf, (k,v), Leaf)
-      | Two(left,n,right) -> insert_downward_two (k,v) n
-      | Three(left,n1,middle,n2,right) -> insert_downward_three (k,v) n1 n2
+      | Two(left,n,right) -> insert_downward_two (k,v) n left right
+      | Three(left,n1,middle,n2,right) -> 
+				insert_downward_three (k,v) n1 n2 left middle right
 
   (* Downward phase on a Two node. (k,v) is the (key,value) we are inserting,
    * (k1,v1) is the (key,value) of the current Two node, and left and right
@@ -461,9 +479,16 @@ struct
   and insert_downward_two ((k,v): pair) ((k1,v1): pair) 
       (left: dict) (right: dict) : kicked = 
     match D.compare k k1 with 
-		| Less -> insert_downward left k v
+		| Less -> 
+			(match insert_downward left k v with 
+			| Up(l,(k',v'),r) -> insert_upward_two (k',v') l r (k1,v1) right
+			| Done x -> Done x)
 		| Eq -> Done(Two(left,(k,v),right))
-		| Greater -> insert_downard right k v
+		| Greater -> 
+			(match insert_downward left k v with 
+			| Up(l,(k',v'),r) -> insert_upward_two (k',v') l r (k1,v1) left
+			| Done x -> Done x)
+		
 
   (* Downward phase on a Three node. (k,v) is the (key,value) we are inserting,
    * (k1,v1) and (k2,v2) are the two (key,value) pairs in our Three node, and
@@ -471,11 +496,23 @@ struct
   and insert_downward_three ((k,v): pair) ((k1,v1): pair) ((k2,v2): pair) 
       (left: dict) (middle: dict) (right: dict) : kicked =
     match D.compare k k1, D.compare k k2 with 
-		| Less, _ -> insert_downard left k v
+		| Less, _ -> 
+			(match insert_downward left k v with 
+			| Up(l,(k',v'),r) -> 
+				insert_upward_three (k',v') l r (k1,v1) (k2,v2) middle right
+			| Done x -> Done x)
 		| Eq, _ -> Done(Three(left, (k,v), middle, (k2,v2), right))
-		| Greater, Less -> insert_downward middle k v
+		| Greater, Less -> 
+			(match insert_downward middle k v with 
+			| Up(l,(k',v'),r) -> 
+				insert_upward_three (k',v') l r (k1,v1) (k2,v2) left right
+			| Done x -> Done x)
 		| Greater, Eq -> Done(Three(left, (k1,v1), middle, (k,v), right))
-		| Greater, Greater -> insert_downward right k v
+		| Greater, Greater -> 			
+			(match insert_downward right k v with 
+			| Up(l,(k',v'),r) -> 
+				insert_upward_three (k',v') l r (k1,v1) (k2,v2) left middle
+			| Done x -> Done x)
 
   (* We insert (k,v) into our dict using insert_downward, which gives us
    * "kicked" up configuration. We return the tree contained in the "kicked"
@@ -998,5 +1035,5 @@ module Make (D:DICT_ARG) : (DICT with type key = D.key
   (* Change this line to the BTDict implementation when you are
    * done implementing your 2-3 trees. *)
   AssocListDict(D) 
-(*  BTDict(D) *)
+ (* BTDict(D) *)
 
