@@ -231,10 +231,10 @@ module DictSet(C : COMPARABLE) : (SET with type elt = C.t) =
 struct
   module D = Dict.Make(struct
 		type key = C.t
-		type value = bool
+		type value = unit
 		let compare = C.compare
     let string_of_key = C.string_of_t
-    let string_of_value = string_of_bool
+    let string_of_value = (fun () -> "")
 
     (* These functions are for testing purposes *)
     let gen_key () = C.gen ()
@@ -242,7 +242,7 @@ struct
     let gen_key_lt x () = gen_key ()
     let gen_key_random () = gen_key ()
     let gen_key_between x y () = C.gen_between x y ()
-		let gen_value = (fun () -> true)
+		let gen_value = (fun () -> ())
     let gen_pair () = (gen_key(),gen_value())
   end)
 	
@@ -256,9 +256,9 @@ struct
 	let is_empty d = 
 		D.fold (fun _ _ size -> size + 1) 0 d = 0
   
-	let singleton k = D.insert D.empty k true
+	let singleton k = D.insert D.empty k ()
   
-	let insert k d = D.insert d k true
+	let insert k d = D.insert d k ()
   
 	let union d1 d2 = 
     if d1 = D.empty then d2 
@@ -305,7 +305,7 @@ struct
     let rec aux (size: int) (d: set) (inc : C.t) = 
 			let inc' = ((C.gen_gt inc) ()) in
 			if size <= 0 then d
-    	else aux (size - 1) (D.insert d inc' true) inc'
+    	else aux (size - 1) (D.insert d inc' ()) inc'
 		in aux size D.empty (C.gen())
 	
 	(* generate a random list of a given size *)
@@ -350,7 +350,7 @@ struct
 		assert(remove (zero) D.empty = D.empty) ;
 		
 		(* s1 : {1} *)
-		let s1 = D.insert D.empty i true in
+		let s1 = D.insert D.empty i () in
 		
 		assert(remove i s1 = D.empty) ;
 		assert(remove (C.gen_gt i ()) s1 = s1) ;
@@ -369,9 +369,9 @@ struct
 
     (* test that union disjoint sets is equal to the set containing all of the 
      * elements *)
-    let s0 = D.insert D.empty i0 true in
-    let s1 = D.insert D.empty i1 true in
-    let s2 = D.insert s1 i0 true in
+    let s0 = D.insert D.empty i0 () in
+    let s1 = D.insert D.empty i1 () in
+    let s2 = D.insert s1 i0 () in
     assert (union s0 s1 = s2);
 
     (* test that the union of two disjoint singleton sets is of size 2 *)
@@ -379,8 +379,8 @@ struct
 
     (* test that the union of sets containing the same items is equal
      * to one of the sets *)
-    let s0' = D.insert s0 i1 true in
-    let s1' = D.insert s1 i0 true in
+    let s0' = D.insert s0 i1 () in
+    let s1' = D.insert s1 i0 () in
     assert (union s0' s1' = s0' || union s0' s1' = s1');
 
     (* test that the union of two identical sets has same size as the sets *)
@@ -401,14 +401,14 @@ struct
     let i1 = C.gen_gt i0 () in
 
     (* test that intersection of disjoint sets is the empty set *)
-    let s0 = D.insert D.empty i0 true in
-    let s1 = D.insert D.empty i1 true in
+    let s0 = D.insert D.empty i0 () in
+    let s1 = D.insert D.empty i1 () in
     assert (intersect s0 s1 = D.empty);
 
     (* test that the intersection of sets containing the same items is equal
      * to one of the sets *)
-    let s0' = D.insert s0 i1 true in
-    let s1' = D.insert s1 i0 true in
+    let s0' = D.insert s0 i1 () in
+    let s1' = D.insert s1 i0 () in
     assert (intersect s0' s1' = s0' || intersect s0' s1' = s1');
 
     (* test that the intersection of the empty set with the empty set is the 
@@ -427,7 +427,7 @@ struct
     let i' = C.gen_gt i () in
     
     (* test that an i that is added is a member *)
-    let s = D.insert D.empty i true in
+    let s = D.insert D.empty i () in
     assert(member s i);
 
     (* test that an i' that has not been added is not a member *)
@@ -440,7 +440,7 @@ struct
     (* test that an i that is added to an empty set which used to have 
      * a single member, is a member 
      *)
-    let s'' = D.insert s' i' true in
+    let s'' = D.insert s' i' () in
     assert(member s'' i');
 
     (* test that an empty set has no members *)
@@ -460,7 +460,7 @@ struct
 		let one = C.gen_gt zero () in
 		
 		(* s1 : {1} *)
-		let s1 = D.insert D.empty one true in 
+		let s1 = D.insert D.empty one () in 
 		
 		(* choose from list only containing {1} *)
 		match choose s1 with 
@@ -483,7 +483,7 @@ struct
 		let one = C.gen_gt zero () in
 		
 		(* s1 : {1} *)
-		let s1 = D.insert D.empty one true in 
+		let s1 = D.insert D.empty one () in 
 		(* s2 : {1,2,3...100} *)
 		let s2 = generate_consecutive_dict 100 in 
 		
@@ -500,7 +500,7 @@ struct
 		assert(is_empty D.empty) ; 
 		
 		let i = C.gen_random() in
-		let s1 = D.insert D.empty i true in
+		let s1 = D.insert D.empty i () in
 		
 		(* test the set with one element and then that set with the element 
      * removed *)
