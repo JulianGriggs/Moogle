@@ -996,6 +996,67 @@ struct
 		assert(member ret key6) ;			
 		()
 
+	let test_remove () = 
+		(* test remove from empty dict *)
+		let ret = remove d_leaf key1 in 
+		assert(balanced ret) ;
+		assert(ret = empty) ;
+		
+		(* test remove from a two *)
+		let ret = remove d_2 key1 in 
+		assert(balanced ret) ;
+		assert(not(member ret key1)) ;
+		assert(ret = empty) ;
+		let ret = remove d_2 key6 in 
+		assert(balanced ret) ;
+		assert(ret = d_2) ;
+		
+		
+		(* test remove new key into a three *)
+		let ret = remove d_3 key2 in 
+		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(not(member ret key2)) ;
+		let ret = remove d_3 key6 in 
+		assert(balanced ret) ;
+		assert(ret = d_3) ;
+		
+		(* test remove new key into a two of twos *)
+		let ret = remove d_2_2 key3 in 
+		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(member ret key2) ;
+		assert(not(member ret key3)) ;
+		let ret = remove d_2_2 key6 in 
+		assert(balanced ret) ;
+		assert(ret = d_2_2) ;
+
+		
+		(* test remove new key into a two of threes *)
+		let ret = remove d_2_3 key5 in 
+		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(member ret key2) ;
+		assert(member ret key3) ;
+		assert(member ret key4) ;
+		assert(not(member ret key5)) ;
+		let ret = remove d_2_3 key6 in 
+		assert(balanced ret) ;
+		assert(ret = d_2_3) ;
+		
+		(* test remove new key into a three of twos *)
+		let ret = remove d_3_2 key5 in 
+		assert(balanced ret) ;
+		assert(member ret key1) ;
+		assert(member ret key2) ;
+		assert(member ret key3) ;
+		assert(member ret key4) ;
+		assert(not(member ret key5)) ;
+		let ret = remove d_3_2 key6 in 
+		assert(balanced ret) ;
+		assert(ret = d_3_2) ;
+		()
+
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
@@ -1019,7 +1080,7 @@ struct
     List.iter 
       (fun (k,v) -> 
         let r = remove d1 k in
-				print_endline (string_of_tree r) ;
+				print_endline (string_of_key k) ;
 						print_endline "*************************************" ;
         let _ = List.iter 
           (fun (k2,v2) ->
@@ -1060,6 +1121,7 @@ struct
 		test_lookup () ;
 		test_member () ;
 		test_insert () ;
+		test_remove () ;
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
