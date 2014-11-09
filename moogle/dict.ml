@@ -698,7 +698,9 @@ struct
    * as an option this (key,value) pair along with the new dictionary. 
    * If our dictionary is empty, this should return None. *)
   let choose (d: dict) : (key * value * dict) option =
-    raise TODO
+    match d with 
+		| Leaf -> None
+		| Two(_,(k,v),_) | Three(_,(k,v),_,_,_) -> Some (k,v,remove d k)
 
   (* TODO:
    * Write a function that when given a 2-3 tree (represented by our
@@ -1056,7 +1058,30 @@ struct
 		assert(balanced ret) ;
 		assert(ret = d_3_2) ;
 		()
-
+		
+	let test_choose () =
+		(* test choose from empty dict *)
+		let ret = choose d_leaf in 
+		assert(ret = None) ;
+		
+		(* test choose from a dict with one key *)
+		let ret = choose d_2 in 
+		match ret with 
+		| Some (ret_k,ret_v,ret_d) -> 
+			assert(balanced ret_d) ;
+			assert(not(member ret_d key1)) ;
+			assert(ret_d = empty) ;
+			assert(ret_k = key1) ;
+		| None -> () ; 
+		
+		(* test choose from a dict with multiple keys *)
+		let ret = choose d_3_2 in 
+		match ret with
+		| Some (ret_k,ret_v,ret_d) -> 
+			assert(balanced ret_d) ;
+		| None -> () ; 
+		() 
+		
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
@@ -1075,13 +1100,9 @@ struct
   let test_remove_in_order () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
-		print_endline (string_of_tree d1) ;
-		print_endline "*************************************" ;
     List.iter 
       (fun (k,v) -> 
         let r = remove d1 k in
-				print_endline (string_of_key k) ;
-						print_endline "*************************************" ;
         let _ = List.iter 
           (fun (k2,v2) ->
             if k = k2 then assert(lookup r k2 = None)
@@ -1122,6 +1143,7 @@ struct
 		test_member () ;
 		test_insert () ;
 		test_remove () ;
+		test_choose () ;
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
@@ -1164,6 +1186,6 @@ module Make (D:DICT_ARG) : (DICT with type key = D.key
   with type value = D.value) = 
   (* Change this line to the BTDict implementation when you are
    * done implementing your 2-3 trees. *)
-  AssocListDict(D) 
- (* BTDict(D) *)
+  (* AssocListDict(D) *)
+  BTDict(D) 
 
