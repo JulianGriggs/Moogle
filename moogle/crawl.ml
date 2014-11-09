@@ -73,12 +73,19 @@ let addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
       d
   ;;
 
-(* Takes a page and a LinkSet.set and returns a new set with all of
- * the links on the page added to the set.
+let assertNoOverlap (frontier: LinkSet.set) (visited:LinkSet.set) : unit = 
+  LinkSet.fold (fun elt a -> assert(LinkSet.member visited elt = false) ; a) () frontier
+
+(* Takes a page and a LinkSet.set 'frontier' and a LinkSet.set 'visited'.  
+ * Returns a new set with all of the links on the page, that have not already
+ * been visited, added to the frontier.
  *)
-let addLinksToSet (page : page) (set: LinkSet.set) : LinkSet.set = 
+let addUnseenLinksToFrontier (page : page) (frontier: LinkSet.set) 
+                                (visited:LinkSet.set) : LinkSet.set = 
   let links = page.links in
-  List.fold_right (fun x y -> LinkSet.insert x y) links set
+  List.fold_right 
+  (fun x y -> if (LinkSet.member visited x) then y else LinkSet.insert x y)
+    links frontier
 ;;
 
 (* Build an index as follows:
@@ -96,14 +103,15 @@ let rec crawl (n:int) (frontier: LinkSet.set)
   else 
      match LinkSet.choose frontier with
       | None -> d
-      | Some (link, newSet) -> 
+      | Some (link, setMinusCurrentLink) -> 
         let updatedVis = LinkSet.insert link visited in 
         (match get_page link with
           (* Might want to look at to ensure no infinite loop*)
-          | None -> crawl n newSet updatedVis d
+          | None -> crawl n setMinusCurrentLink updatedVis d
           | Some page -> 
             let updatedDict = addLinkForEachWord page d in
-            let updatedFrontier = addLinksToSet page newSet in
+            let updatedFrontier = 
+              addUnseenLinksToFrontier page setMinusCurrentLink updatedVis in
             crawl (n-1) updatedFrontier updatedVis updatedDict 
         )
 ;;
@@ -125,7 +133,7 @@ let test_addLinkForEachWord (page: page) : unit =
 ;;
 
 let testURL = { host = "www.test.com" ; port = 80; path = "/" } in
-  let testPage = {url = testURL ; links = [testURL] ; words = ["this"; "is"; "a"; "test"]} in
+let testPage = {url = testURL ; links = [testURL] ; words = ["this"; "is"; "a"; "test"]} in
   test_addLinkForEachWord testPage;;
 
 (* Debugging note: if you set debug=true in moogle.ml, it will print out your
