@@ -532,8 +532,8 @@ struct
     match dir,n,left,right with
       | Left2,x,l,Two(m,y,r) -> Hole(rem,Three(l,x,m,y,r))
       | Right2,y,Two(l,x,m),r -> Hole(rem,Three(l,x,m,y,r))
-      | Left2,x,a,Three(b,y,c,z,d) -> Hole(rem,Two(Two(a,x,b),y,Two(c,z,d)))
-      | Right2,z,Three(a,x,b,y,c),d -> Hole(rem,Two(Two(a,x,b),y,Two(c,z,d)))
+      | Left2,x,a,Three(b,y,c,z,d) -> Absorbed(rem,Two(Two(a,x,b),y,Two(c,z,d)))
+      | Right2,z,Three(a,x,b,y,c),d -> Absorbed(rem,Two(Two(a,x,b),y,Two(c,z,d)))
       | Left2,_,_,_ | Right2,_,_,_ -> Absorbed(rem,Two(Leaf,n,Leaf))
 
   (* Upward phase for removal where the parent of the hole is a Three node.
