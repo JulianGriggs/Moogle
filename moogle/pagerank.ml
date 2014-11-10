@@ -150,12 +150,6 @@ struct
     | None -> NS.empty
     | Some n' -> n'
 
-  let deopt_aux (f : int -> G.node -> NS.node_score_map -> NS.node_score_map)
-                        (randElement: 'a option) (steps:int) (ns : NS.node_score_map) = 
-            match randElement with
-            | None -> NS.empty
-            | Some e -> f (steps - 1) e ns
-
 
   (* Returns a random element from a list.  If the list is empty, 
    * returns None. 
@@ -175,30 +169,53 @@ struct
 
   *)
   let rank (g : G.graph) : NS.node_score_map = 
+          (* 
+         * If there are neighboring nodes:
+         * Case 1: P.do_random_jumps is not None: then with probability, alpha,
+         * jump to a random node in the graph.  With probability 1-alpha go to a
+         * random node amongst the neighbors of the current one.
+         * 
+         * Case 2: P.do_random_jumps is None -  go to a random node amongst the
+         * neighbors of the current one.
+         * *)
     let rec aux (steps : int) (n : G.node) (ns: NS.node_score_map) 
                                             : NS.node_score_map = 
       if steps = 0 then ns
       else
+
         (* Update the nodescore for the current node *)
         let ns' = NS.add_score ns n 1.0 in
         
         (* Get the list of all nodes neighboring the current node *)
         match G.neighbors g n with
+        
         (* If no neighboring nodes then jump to a random one in the graph *)
         | None ->                 
           let n' = deopt_raiseExc (G.get_random_node g) in
           aux (steps-1) n' ns'
-        (* If there are neighboring nodes *)
+
         | Some ls -> 
-          (let randomN = chooseRandom ls in
-           (* Accounting for possible random jump probability *)
-           match P.do_random_jumps with 
-            | None -> deopt_aux aux randomN steps ns'
+          (
+            let randomN = chooseRandom ls in
+            match P.do_random_jumps with 
+            | None ->
+            (
+              match randomN with
+              | None -> NS.empty
+              | Some e -> aux (steps-1) e ns'
+            )
             | Some alpha ->
               if alpha <= Random.float 1.0 then 
                 let n' = deopt_raiseExc (G.get_random_node g) in
                 aux (steps-1) n' ns'
-              else deopt_aux aux randomN steps ns')
+              else 
+                (
+                  match randomN with
+                  | None -> NS.empty
+                  | Some e -> aux (steps-1) e ns'
+                )
+          )
+          
     in
     match G.get_random_node g with 
     | None -> NS.empty
