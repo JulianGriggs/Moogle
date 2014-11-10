@@ -118,7 +118,6 @@ end
 (*****************************************************************)
 (* Random Walk Ranker                                            *)
 (*****************************************************************)
-(*
 
 module type WALK_PARAMS =
 sig
@@ -130,6 +129,7 @@ sig
   val num_steps : int
 end
 
+
 module RandomWalkRanker (GA: GRAPH) (NSA: NODE_SCORE with module N = GA.N) 
   (P : WALK_PARAMS) : 
   (RANKER with module G = GA with module NS = NSA) =
@@ -137,9 +137,74 @@ struct
   module G = GA
   module NS = NSA
 
-  (* TODO - fill this in*)
+  exception BAD_LOGIC
+  
+
+  let deopt_raiseExc n = 
+    match n with 
+    | None -> raise BAD_LOGIC
+    | Some n' -> n'
+
+  let deopt_NSEmpty n = 
+    match n with 
+    | None -> NS.empty
+    | Some n' -> n'
+
+  let deopt_aux (f : int -> G.node -> NS.node_score_map -> NS.node_score_map)
+                        (randElement: 'a option) (steps:int) (ns : NS.node_score_map) = 
+            match randElement with
+            | None -> NS.empty
+            | Some e -> f (steps - 1) e ns
+
+
+  (* Returns a random element from a list.  If the list is empty, 
+   * returns None. 
+   *)
+  let chooseRandom (ls: 'a list) : 'a option = 
+    match ls with
+    | [] -> None
+    | _ -> Some (List.nth ls (Random.int (List.length ls)))
+
+
+  (*
+  - Select a random start node, n
+  Loop
+  - Base Case: Steps = 0
+  - call choose random on the node list of n, call it n'
+  - increment the frequency of seeing n' and decrement step
+
+  *)
+  let rank (g : G.graph) : NS.node_score_map = 
+    let rec aux (steps : int) (n : G.node) (ns: NS.node_score_map) 
+                                            : NS.node_score_map = 
+      if steps = 0 then ns
+      else
+        (* Update the nodescore for the current node *)
+        let ns' = NS.add_score ns n 1.0 in
+        
+        (* Get the list of all nodes neighboring the current node *)
+        match G.neighbors g n with
+        (* If no neighboring nodes then jump to a random one in the graph *)
+        | None ->                 
+          let n' = deopt_raiseExc (G.get_random_node g) in
+          aux (steps-1) n' ns'
+        (* If there are neighboring nodes *)
+        | Some ls -> 
+          (let randomN = chooseRandom ls in
+           (* Accounting for possible random jump probability *)
+           match P.do_random_jumps with 
+            | None -> deopt_aux aux randomN steps ns'
+            | Some alpha ->
+              if alpha <= Random.float 1.0 then 
+                let n' = deopt_raiseExc (G.get_random_node g) in
+                aux (steps-1) n' ns'
+              else deopt_aux aux randomN steps ns')
+    in
+    match G.get_random_node g with 
+    | None -> NS.empty
+    | Some n -> NS.normalize(aux P.num_steps n NS.empty)
+    
 end
-*)
 
 
 (*******************  TESTS BELOW  *******************)
@@ -173,7 +238,7 @@ struct
 
 end
 
-(*
+
 module TestRandomWalkRanker =
 struct 
   module G = NamedGraph
@@ -204,6 +269,6 @@ struct
 
 (* That's the problem with randomness -- hard to test *)
 end
-*)
+
 
 
