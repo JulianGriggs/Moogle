@@ -180,9 +180,9 @@ struct
          * *)
     let rec aux (steps : int) (n : G.node) (ns: NS.node_score_map) 
                                             : NS.node_score_map = 
+
       if steps = 0 then ns
       else
-
         (* Update the nodescore for the current node *)
         let ns' = NS.add_score ns n 1.0 in
         
@@ -190,10 +190,10 @@ struct
         match G.neighbors g n with
         
         (* If no neighboring nodes then jump to a random one in the graph *)
-        | None ->                 
+        | None -> raise BAD_LOGIC             
+        | Some [] -> 
           let n' = deopt_raiseExc (G.get_random_node g) in
           aux (steps-1) n' ns'
-
         | Some ls -> 
           (
             let randomN = chooseRandom ls in
