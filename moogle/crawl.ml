@@ -57,20 +57,20 @@ let print s =
 let addLinkForEachWord (page : page) (d : WordDict.dict) : WordDict.dict =
   let url = page.url in
   let words = page.words in
-    List.fold_right 
+    List.fold_left 
       (fun x y -> 
-        match WordDict.lookup y x with
+        match WordDict.lookup x y with
         | None -> 
           (* Create a set with the only value equaling the url*)
           let newSet = LinkSet.singleton url in
           (* Update the dictionary with k,v pair (new word, set(url)*)
-          WordDict.insert y x newSet
+          WordDict.insert x y newSet
         | Some set ->
           let newSet = LinkSet.insert url set in
-          WordDict.insert y x newSet
+          WordDict.insert x y newSet
         ) 
-      words 
-      d
+      d 
+      words
   ;;
 
 let assertNoOverlap (frontier: LinkSet.set) (visited:LinkSet.set) : unit = 
@@ -106,7 +106,6 @@ let rec crawl (n:int) (frontier: LinkSet.set)
       | Some (link, setMinusCurrentLink) -> 
         let updatedVis = LinkSet.insert link visited in 
         (match get_page link with
-          (* Might want to look at to ensure no infinite loop*)
           | None -> crawl n setMinusCurrentLink updatedVis d
           | Some page -> 
             let updatedDict = addLinkForEachWord page d in
