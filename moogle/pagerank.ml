@@ -139,15 +139,9 @@ struct
 
   exception BAD_LOGIC
   
-
   let deopt_raiseExc n = 
     match n with 
     | None -> raise BAD_LOGIC
-    | Some n' -> n'
-
-  let deopt_NSEmpty n = 
-    match n with 
-    | None -> NS.empty
     | Some n' -> n'
 
 
@@ -187,16 +181,18 @@ struct
         let ns' = NS.add_score ns n 1.0 in
         
         (* Get the list of all nodes neighboring the current node *)
-        match G.neighbors g n with
+        match G.neighbors g n  with
         
-        (* If no neighboring nodes then jump to a random one in the graph *)
+        (* If node not in the graph *)
         | None -> raise BAD_LOGIC             
+        (*  No neighboring nodes so jump to a random one in the graph *)
         | Some [] -> 
           let n' = deopt_raiseExc (G.get_random_node g) in
           aux (steps-1) n' ns'
+        (* Neighboring nodes exist, so account for random jump probability*)
         | Some ls -> 
+          let randomN = chooseRandom ls in
           (
-            let randomN = chooseRandom ls in
             match P.do_random_jumps with 
             | None ->
             (
