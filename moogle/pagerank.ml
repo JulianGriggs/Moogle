@@ -193,7 +193,7 @@ struct
             match P.do_random_jumps with 
             | None -> aux (steps - 1) randomN ns'
             | Some alpha ->
-              if alpha <= Random.float 1.0 then 
+              if alpha >= Random.float 1.0 then 
                 let n' = deopt_getRandomNode (G.get_random_node g) in
                 aux (steps - 1) n' ns'
               else aux (steps - 1) randomN ns'
