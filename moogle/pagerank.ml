@@ -185,18 +185,18 @@ struct
         (*  No neighboring nodes so jump to a random one in the graph *)
         | Some [] -> 
           let n' = deopt_getRandomNode(G.get_random_node g) in
-          aux (steps-1) n' ns'
+          aux (steps - 1) n' ns'
         (* Neighboring nodes exist, so account for random jump probability*)
         | Some ls -> 
           let randomN = chooseRandom ls in
           (
             match P.do_random_jumps with 
-            | None -> aux (steps -1) randomN ns'
+            | None -> aux (steps - 1) randomN ns'
             | Some alpha ->
               if alpha <= Random.float 1.0 then 
                 let n' = deopt_getRandomNode (G.get_random_node g) in
-                aux (steps-1) n' ns'
-              else aux (steps -1) randomN ns'
+                aux (steps - 1) n' ns'
+              else aux (steps - 1) randomN ns'
           )
           
     in
