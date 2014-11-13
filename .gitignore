@@ -5,3 +5,9 @@ moogle/.paths
 moogle/.settings
 moogle/moogle.d.byte
 .*~
+.ocamlinit
+.project
+.settings/
+OCamlMakefile
+_build/
+queue.d.byte
