@@ -254,7 +254,10 @@ struct
   let empty = D.empty
   
 	let is_empty d = 
-		D.fold (fun _ _ size -> size + 1) 0 d = 0
+		(* D.fold (fun _ _ size -> size + 1) 0 d = 0 *)
+    match D.choose d with
+    | None -> true
+    | Some _ -> false
   
 	let singleton k = D.insert D.empty k ()
   
