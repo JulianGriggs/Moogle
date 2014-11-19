@@ -11,3 +11,5 @@ moogle/moogle.d.byte
 OCamlMakefile
 _build/
 queue.d.byte
+a6/.paths
+*.d.byte

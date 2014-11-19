@@ -37,6 +37,8 @@ open Num;;
 
 open Lazy;;
 
+exception WrongLogic;;
+
 (* some useful numbers *)
 let zero  : num = Int 0
 let one   : num = Int 1
@@ -59,23 +61,44 @@ let rec ones : num stream =
 (* Implement the head and tail functions *)
 
 let head (s:'a stream) : 'a =
-  raise (Failure "unimplemented")
+  match s with 
+	| lazy (Cons (hd,_)) -> hd
 ;;
 
+assert(head ones = one);;
+
 let tail (s:'a stream) : 'a stream =
-  raise (Failure "unimplemented")
+  match s with 
+	| lazy (Cons (_,tl)) -> tl
 ;;
+
+let rec test_tail (n:int) =
+	match n with 
+	| 0 -> ()
+	| n -> assert(head (tail ones) = one); test_tail (n-1)
+;;
+
+test_tail 100;;
 
 (*>* Problem 2.1.b *>*)
 (* Implement map *)
 
 let rec map (f:'a -> 'b) (s:'a stream) : 'b stream =
-  raise (Failure "unimplemented")
+  match s with 
+	| lazy (Cons (hd,tl)) -> lazy (Cons(f hd, map f tl))
 ;;
+
+
 
 (*>* Problem 2.1.c *>*)
 (* Define the infinite stream of natural numbers *)
-let rec nats : num stream = raise (Failure "unimplemented") ;;
+let rec nats : num stream = 
+	let rec aux i =
+		lazy (
+  		Cons (i, aux ((+/) i one))
+		)
+	in aux zero
+;;
 
 (*>* Problem 2.1.d *>*)
 (* Write a function nth, which returns the nth element of a
@@ -83,7 +106,7 @@ let rec nats : num stream = raise (Failure "unimplemented") ;;
    words, "nth 0 s" should be equivalent to "head s". *)
 
 let rec nth (n:num) (s:'a stream) : 'a =
-  raise (Failure "unimplemented")
+	if (=/) n zero then head s else nth ((-/) n one) (tail s)
 ;;
 
 (*>* Problem 2.1.e *>*)
