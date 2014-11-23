@@ -1,5 +1,5 @@
-Name:
-Login:
+Name: Julian Griggs, Cole McCracken
+Login: jgriggs, cmccrack
 
 Questions on Queues:
 
@@ -51,7 +51,7 @@ continue.
 
 (2) What do you have to prove to show that M1.emp is properly related to M2.emp?
 
-Theorem:  ...
+Theorem:  abstract M1.emp == M2.emp
 
 
 
@@ -60,8 +60,12 @@ reasoning:
 
 Proof:
 
-
-
+1) abstract M1.emp											LHS
+2) abstract ([], [])										eval M1.emp
+3) [] @ (List.rev [])										eval abstract
+4) [] @ []													Lemma 3
+5) []														Lemma 1
+6) M2.emp													reverse eval
 
 QED!
 
@@ -89,16 +93,26 @@ Now assume the the "if" component of the theorem holds:
 
 Now using those assumptions, prove the "then" part of the theorem:
 
-   abstract (M1.ins (i,q1))                 (LHS)
-==
-...
-== M2.ins (i,q2)                            (RHS)
+1) abstract (M1.ins (i,q1))                 				LHS
+2) abstract (f,i::b)										eval M1.ins
+3) f @ List.rev (i::b)										eval abstract
+4) f @ (List.rev b @ [i])									Lemma 4
+5) (f @ List.rev b) @ [i]									Lemma 2
+6) (abstract (f,b)) @ [i]									reverse eval abstract
+6) q2 @ [i]													(1),(2) above
+7) M2.ins (i,q2)                            				reverse eval M2.ins
 
 QED!
 
 (6) What do you have to prove to show that M1.rem is properly related to M2.rem?
 
-Theorem: ...
+Theorem: 
+for all integers i, 
+for all q1:int list * int list,
+for all q2:int list, 
+if   q1 == (f,b)
+and  abstract q1 == q2 
+then abstract (M1.rem q1) == M2.rem q2
 
 
 (You don't have to prove this theorem -- just state it.)
