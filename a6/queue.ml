@@ -121,7 +121,13 @@ module AmortizedQ : QUEUE = struct
    * the fact that the check function is called at the end of insert
    * and at the end of rem.  What representation invariant does it 
    * help to ensure?  *)
-  let rep_inv (lenf,front,lenb,back) = failwith "unimplemented";; 
+  let rep_inv (lenf,front,lenb,back) = 
+		if lenf < 0 then false
+		else if lenb < 0 then false
+	  else if lenf < lenb then false
+		else if front = LL.empty && back != LL.empty then false
+		else true
+	;; 
 
   let emp = (0, LL.empty, 0, LL.empty)
 
@@ -172,7 +178,14 @@ module Performance (Q:QUEUE) : PERF = struct
    *
    * EXPLAIN WHAT YOUR TEST DOES IN A COMMENT
    *)
-  let test1 (n:int) = 0.0;;
+	(* insert n items *)
+  let test1 (n:int) = 
+		let rec aux n q = 
+			match n with 
+			| 0 -> ()
+			| _ -> aux (n-1) (Q.ins (n,q))
+		in time_fun (fun _ -> (aux n Q.emp)) ()
+	;;
 
   (* test2:
    *
@@ -195,7 +208,19 @@ module Performance (Q:QUEUE) : PERF = struct
    *
    * EXPLAIN WHAT YOUR TEST DOES IN A COMMENT
    *)
-  let test2 (n:int) = 0.0;;
+	(* insert n/2 elements, then remove from that queue n/2 times *)
+  let test2 (n:int) = 
+		let rec aux_ins n q = 
+			match n with 
+			| 0 -> q
+			| _ -> aux_ins (n-1) (Q.ins (n,q))
+		in 
+		let rec aux_rem n q =
+			match Q.rem q with 
+			| None -> ()
+			| _ -> if n = 0 then () else aux_rem (n-1) q
+		in time_fun (fun _ -> aux_rem (n/2) (aux_ins (n/2) Q.emp)) ()
+	;;
 end;;
 
 module SlowestP = Performance(SlowestQ);;
@@ -230,7 +255,7 @@ let experiment (n:int) : unit =
     (AmortizedP.test1 n)
     (SlowestP.test2 n)
     (SlowP.test2 n)
-    (AmortizedP.test2 n) 
+    (AmortizedP.test2 n)  
 ;;
 
 let main () = 
@@ -244,10 +269,11 @@ let main () =
   List.iter experiment ns
 ;;
 
-(*
+
 
 (* uncomment this block to run tests, 
  * but please do not submit with it uncommented
  *)
+(*
 main ();;
 *)
