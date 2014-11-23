@@ -181,13 +181,28 @@ let p21f = "Inputs that repeat forever cause merge to lead to a
  * Such a spreadsheet will need to support the following operations:
  *)
 
-type 'a spread_sheet = num;; (* change me! *)
+type 'a spread_sheet = 'a stream stream;; (* change me! *)
 
 (* you can assume all coordinates given are non-negative *)
 type coordinates = num * num ;;
 
 (* a spreadsheet containing all zeros *)
-let zeros : num spread_sheet = num_of_int 0;; (* change me *)
+let zeros : num spread_sheet = 
+	let rec aux_j : num stream =
+		lazy (
+			Cons(zero, aux_j)
+		)
+	in
+	let rec aux_i : num stream stream = 
+		lazy (
+			Cons(aux_j, aux_i)
+		)
+	in
+	aux_i
+;; 
+
+assert(head (head zeros) = zero);;
+assert(head (tail (head (tail (zeros)))) = zero);;
 
 (* return the element at the (i,j) coordinate in ss *)
 let get ((i,j):coordinates) (ss:'a spread_sheet) : 'a = 
@@ -203,7 +218,22 @@ let map_all (f:num -> num -> 'a -> 'b) (ss:'a spread_sheet) : 'b spread_sheet =
 
 (* create an infinite multiplication table in which every cell contains the
  * product of its indices *)
-let multiplication_table = num_of_int 0;; (* change me *)
+let multiplication_table : num spread_sheet = 
+	let rec aux_j (i:num) (j:num) : num stream =
+		lazy (
+			Cons(( */ ) i j, aux_j i ((+/) j one))
+		)
+	in 
+	let rec aux_i (i:num) : num spread_sheet = 
+		lazy (
+			Cons(aux_j i zero, aux_i ((+/) i one))
+		)
+	in
+	aux_i zero
+;;
+
+assert(head (head multiplication_table) = zero);;
+assert(head (tail (head (tail (multiplication_table)))) = one);;
 
 (* produce a spreadsheet in which cell (i,j) contains the ith element
  * of is and the jth element of js *)
