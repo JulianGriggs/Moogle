@@ -188,7 +188,7 @@ type coordinates = num * num ;;
 
 (* a spreadsheet containing all zeros *)
 let zeros : num spread_sheet = 
-	let rec aux_j : num stream =
+	let rec aux_j: num stream =
 		lazy (
 			Cons(zero, aux_j)
 		)
@@ -201,19 +201,35 @@ let zeros : num spread_sheet =
 	aux_i
 ;; 
 
-assert(head (head zeros) = zero);;
-assert(head (tail (head (tail (zeros)))) = zero);;
 
 (* return the element at the (i,j) coordinate in ss *)
 let get ((i,j):coordinates) (ss:'a spread_sheet) : 'a = 
-  failwith "unimplemented"
+  let rec aux_j n s = 
+		if (=/) n zero then head s
+		else aux_j ((-/) n one) (tail s)
+	in 
+	let rec aux_i n ss =
+		if (=/) n zero then aux_j j (head ss) 
+		else aux_i ((-/) n one) (tail ss)
+	in 
+	aux_i i ss
 ;;
 
 (* create a new spreadsheet where the (i,j) element of the spreadsheet
  * contains f i j xij  when xij was the (i,j) element of the input spreadsheet
  *)
 let map_all (f:num -> num -> 'a -> 'b) (ss:'a spread_sheet) : 'b spread_sheet = 
-  failwith "unimplemented"
+	let rec aux_j (i:num) (j:num) (s:'a stream) : 'b stream =
+		lazy (
+			Cons(f i j (head s), aux_j i ((+/) j one) (tail s))
+		)
+	in 
+	let rec aux_i (i:num) (ss:'a spread_sheet) : 'b spread_sheet = 
+		lazy (
+			Cons(aux_j i zero (head ss), aux_i ((+/) i one) (tail ss))
+		)
+	in
+	aux_i zero ss
 ;;
 
 (* create an infinite multiplication table in which every cell contains the
@@ -232,12 +248,38 @@ let multiplication_table : num spread_sheet =
 	aux_i zero
 ;;
 
-assert(head (head multiplication_table) = zero);;
-assert(head (tail (head (tail (multiplication_table)))) = one);;
-
 (* produce a spreadsheet in which cell (i,j) contains the ith element
  * of is and the jth element of js *)
 let cross_product (is:'a stream) (js:'b stream) : ('a * 'b) spread_sheet =
-  failwith "unimplemented"
+	let rec aux_j (iv:'a) (js:'b stream) : ('a * 'b) stream =
+		lazy (
+			Cons((iv, head js), aux_j iv (tail js))
+		)
+	in 
+	let rec aux_i (is:'a stream) (js:'a stream) : ('a * 'b) spread_sheet = 
+		lazy (
+			Cons(aux_j (head is) js, aux_i (tail is) js)
+		)
+	in
+	aux_i is js
 ;;
+
+assert(head (head zeros) = zero);;
+assert(head (tail (head (tail (zeros)))) = zero);;
+assert(get (zero,zero) zeros = zero);;
+assert(get (one,one) zeros = zero);;
+assert(get (zero,zero) multiplication_table = zero);;
+assert(get (one,one) multiplication_table = one);;
+assert(get (one,three) multiplication_table = three);;
+assert(get (two,two) multiplication_table = four);;
+assert(head (head multiplication_table) = zero);;
+assert(head (tail (head (tail (multiplication_table)))) = one);;
+assert(get (one,one) (map_all (fun i j v -> (+/) v one) zeros) = one);;
+assert(get (one,one) (map_all (fun i j v -> (+/) i j) zeros) = two);;
+assert(get (one,one) (map_all (fun i j v -> ( */ ) i j) zeros) = one);;
+assert(get (three,two) (map_all (fun i j v -> (+/) i v) zeros) = three);;
+assert(get (one,one) (cross_product nats nats) = (one,one));;
+assert(get (one,two) (cross_product nats nats) = (one,two));;
+assert(get (two,two) (cross_product nats nats) = (two,two));;
+
 
