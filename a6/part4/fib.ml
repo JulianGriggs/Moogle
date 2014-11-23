@@ -51,8 +51,14 @@ end;;
  * implementation of FIB memoized by hand *)
 module MemoFib (D : DICT with type key = int) : FIB =
 struct
+ 	let dict = ref (D.add 1 1 (D.add 0 0 D.empty))
+  let rec fib (n:int) : int = 
+		match D.mem n !dict with 
+		| true -> D.find n !dict
+		| false -> let fib_n = fib (n-1) + fib (n-2) in
+			dict := D.add n fib_n !dict ;
+			fib_n
 
-  let fib _ = failwith "unimplemented"                                                                                                   
 end;;
 
 module ManualMemoedFib = MemoFib(Map.Make(IntOrder));;
@@ -103,11 +109,10 @@ let experiment (n:int) : unit =
   let slow n = if n > 42 then None else Some (time_fun Fib.fib n) in
   let fast = time_fun FastFib.fib  in   
   let manual = 
-    (* time_fun ManualMemoedFib.fib *)  (* CHANGE THIS! *)
-    (fun n -> 0.) 
+    time_fun ManualMemoedFib.fib  (* CHANGE THIS! *)
   in   
   let automated = 
-    (* time_fun AutoMemoedFib.fib *)    (* CHANGE THIS! *)
+   (* time_fun AutoMemoedFib.fib  *)   (* CHANGE THIS! *)
     (fun n -> 0.) 
   in  
   print_row n (slow n) (fast n) (manual n) (automated n)
@@ -122,11 +127,11 @@ let main () =
   List.iter experiment trials
 ;;
 
-(*
+
 
 (* uncomment this block to run tests, 
  * but please do not submit with it uncommented
  *)
 main ();;
-*)
+
 
