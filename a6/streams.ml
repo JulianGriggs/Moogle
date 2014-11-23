@@ -56,6 +56,20 @@ let rec ones : num stream =
     Cons (one, ones)
   )
 
+let rec twos : num stream = 
+  lazy (
+    Cons (two, twos)
+  )
+
+let rec fives : num stream = 
+  lazy (
+    Cons (five, fives)
+  )
+
+
+let a = lazy (Cons(zero, lazy (Cons(two, twos))))
+let b = lazy (Cons(one, lazy (Cons(four, fives))))
+
 
 (*>* Problem 2.1.a *>*)
 (* Implement the head and tail functions *)
@@ -120,14 +134,34 @@ let rec nth (n:num) (s:'a stream) : 'a =
 *)
 
 let merge (s1:num stream) (s2:num stream) : num stream =
-  raise (Failure "unimplemented")
+
+  let rec aux (prev: num option) (s1': num stream) (s2': num stream) = 
+    let h1 = head s1' in
+    let h2 = head s2' in
+    let h1_inFront = lazy (Cons(h1, aux (Some h1) (tail s1') s2')) in
+    let h2_inFront = lazy (Cons(h2, aux (Some h2) s1' (tail s2'))) in
+    match prev with 
+    | None ->
+      if (<=/) h1 h2 then h1_inFront
+      else                h2_inFront
+    | Some x -> 
+      if (<=/) h1 h2 then 
+        if (=/) x h1 then tail h1_inFront
+        else              h1_inFront
+      else 
+        if (=/) x h2 then tail h2_inFront
+        else              h2_inFront
+  in
+
+  aux None s1 s2
 ;;
 
 (*>* Problem 2.1.f *>*)
 (* What kinds of inputs cause your "merge" function above to do something
    bad?  What bad thing happens in these cases?  Answer within the string. *)
 
-let p21f = "" ;;
+let p21f = "Inputs that repeat forever cause merge to lead to a 
+            stack overflow error.  Example: merge nats ones" ;;
 
 
 (*>* Problem 2.2 *>*)
