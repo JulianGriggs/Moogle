@@ -62,17 +62,24 @@ struct
 end;;
 
 module ManualMemoedFib = MemoFib(Map.Make(IntOrder));;
+module AutoMemoizer = Memoizer(Map.Make(IntOrder));;
 
 (* Task 4.3:                             *
  * implementation of FIB memoized using  *
  *   Memoizer from memoizer.ml           *
  *   Map.Make to create a dictionary     *
  *   IntOrder from above                 *)
-module AutoMemoedFib : FIB =
+module AutoMemoedFib : FIB = 
 struct
-
-  let fib _ = failwith "unimplemented"
-
+			
+	let fib_body (recurse:int->int) (n:int) : int = 		
+		if n > 1 then 
+      recurse (n-1) + recurse (n-2)
+    else 
+      n 
+	
+  let rec fib (n:int) : int =     
+	 	AutoMemoizer.memo fib_body n
 end;;
 
 (* main function/testing *)
@@ -112,8 +119,7 @@ let experiment (n:int) : unit =
     time_fun ManualMemoedFib.fib  (* CHANGE THIS! *)
   in   
   let automated = 
-   (* time_fun AutoMemoedFib.fib  *)   (* CHANGE THIS! *)
-    (fun n -> 0.) 
+    time_fun AutoMemoedFib.fib    (* CHANGE THIS! *)
   in  
   print_row n (slow n) (fast n) (manual n) (automated n)
 ;;
@@ -121,8 +127,8 @@ let experiment (n:int) : unit =
 let main () =
   (* change these numbers if you want depending on the speed of your machine *)
   (* on my machine slow_fib starts taking visible time at input 30 *)
-  let trials = [0;1;2;10;20;30;36;37;38;39;40;
-		50;100;25000;50000;100000;200000] in
+  let trials = [0;1;2;10;20;30;40;
+		50;100;25000;50000;100000;100001;200000] in
   print_header();
   List.iter experiment trials
 ;;

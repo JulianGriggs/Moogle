@@ -46,7 +46,23 @@ end;;
 (* implement fast_lcs using your automatic memoizer functor! 
  * doing so will of course require proper creation of modules and
  * use of functors *)
-let fast_lcs (ds : dna * dna) : dna =  failwith "unimplemented";;
+
+module AutoMemoizer = Memoizer(Map.Make(DnaPairOrder));;
+
+let fast_lcs_body (recurse:dna*dna->dna) (s1,s2:dna*dna) : dna = 		
+  match (s1,s2) with 
+      ([], _) -> []
+    | (_, []) -> []
+    | (x :: xs, y :: ys) ->
+      if Base.eq x y then
+	x :: recurse (xs, ys)
+      else
+	Base.longer_dna_of (recurse (s1, ys)) (recurse (xs, s2))
+;;
+
+let fast_lcs (ds : dna * dna) : dna = 
+	AutoMemoizer.memo fast_lcs_body ds
+;;
 
 (* Task 4.5 *)
 
@@ -106,11 +122,11 @@ let main () =
   List.iter experiment ns
 ;;
 
-(*
+
 
 (* uncomment this block to run your experiment, 
  * but please do not submit with it uncommented
  *)
 main ();;
-*)
+
 
