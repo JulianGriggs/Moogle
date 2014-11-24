@@ -53,6 +53,9 @@ let fast_lcs (ds : dna * dna) : dna =  failwith "unimplemented";;
 (* Implement some experiment that shows performance difference
  * between slow_lcs and fast_lcs. (Print your results.)     
  * Explain in a brief comment what your experiment shows.        *)
+
+(* We tested this by generating a random sequence of base pairs of different*)
+(* sizes and comparing the runtime of slow_lcs and fast_lcs *)
 Random.self_init
 
 let test_slow (s1,s2:dna*dna) : float = 
