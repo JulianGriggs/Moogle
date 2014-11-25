@@ -11,10 +11,11 @@ let rec slow_lcs ((s1,s2) : dna * dna) : dna =
     | (_, []) -> []
     | (x :: xs, y :: ys) ->
       if Base.eq x y then
-	x :: slow_lcs (xs, ys)
+	      x :: slow_lcs (xs, ys)
       else
-	Base.longer_dna_of (slow_lcs (s1, ys)) (slow_lcs (xs, s2))
+	      Base.longer_dna_of (slow_lcs (s1, ys)) (slow_lcs (xs, s2))
 ;;
+
 
 (* A potentially useful module *)
 module DnaPairOrder : Map.OrderedType with type t = dna * dna =
@@ -60,10 +61,10 @@ let fast_lcs_body (recurse:dna*dna->dna) (s1,s2:dna*dna) : dna =
 	Base.longer_dna_of (recurse (s1, ys)) (recurse (xs, s2))
 ;;
 
-let fast_lcs (ds : dna * dna) : dna = 
-	AutoMemoizer.memo fast_lcs_body ds
+let fast = AutoMemoizer.memo fast_lcs_body 
+let rec fast_lcs (ds : dna * dna) : dna = 
+  fast ds
 ;;
-
 (* Task 4.5 *)
 
 (* Implement some experiment that shows performance difference
@@ -72,13 +73,13 @@ let fast_lcs (ds : dna * dna) : dna =
 
 (* We tested this by generating a random sequence of base pairs of different*)
 (* sizes and comparing the runtime of slow_lcs and fast_lcs *)
-Random.self_init
+Random.self_init()
 
 let test_slow (s1,s2:dna*dna) : float = 
-	time_fun (fun _ -> (slow_lcs (s1,s2))) ()
+	time_fun slow_lcs (s1,s2)
 
 let test_fast (s1,s2:dna*dna) : float = 
-	time_fun (fun _ -> (fast_lcs (s1,s2))) ()
+	time_fun fast_lcs (s1,s2)
 
 let print_header () =
   print_string "-----   Test 1   Test 2   \n";
@@ -98,7 +99,8 @@ let print_row n test_slow test_fast =
 	print_newline()
 
 let experiment (n:int) : unit =
-	let random_base = 
+	
+  let random_base () = 
 		let r = Random.int 4 in
 		match r with 
 		| 0 -> Base.A
@@ -107,17 +109,21 @@ let experiment (n:int) : unit =
 		| 3 -> Base.G
 		| _ -> failwith "impossible"
 	in
+
 	let rec generate_dna n = 
 		match n with 
 		| 0 -> []
-		| _ -> random_base :: generate_dna (n-1)
+		| _ -> (random_base()) :: generate_dna (n-1)
   in
 	let dna1 = generate_dna n in
 	let dna2 = generate_dna n in
+
+  (* print_string (Base.dna_to_string dna1); *)
+
   print_row n (test_slow (dna1,dna2)) (test_fast (dna1,dna2))
 
 let main () =
-  let ns = [1000; 2000; 4000; 8000; 16000; 32000] in
+  let ns = [1;2;4;8;10;12;14;16;18] in
   print_header();
   List.iter experiment ns
 ;;
