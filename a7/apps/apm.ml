@@ -83,7 +83,9 @@ let print_matches (n : string) ((p, ps) : profile * (float * profile) list) : un
 
 
 
-module PSeq = Sequence.Seq(PFuture)(struct let use_mpi = true end)
+(* module PSeq = Sequence.Seq(PFuture)(struct let use_mpi = true end) *)
+module PSeq = Sequence.ListSeq
+
 
 (* apm computes the potential love of your life.  The filename of a file
  * containing candidate profiles is in location 0 of the given array.
@@ -93,22 +95,25 @@ module PSeq = Sequence.Seq(PFuture)(struct let use_mpi = true end)
 let p_equals (p1:profile) (p2:profile) : bool = 
 	p1.firstname = p2.firstname && p1.lastname = p2.lastname
 
-let compute_match (me:profile) (you:profile) : float = failwith "un"
+let compute_match (me:profile) (you:profile) : float = 0.
 
 let matchme (args : string array) : unit = 
 	let (filename, num_matches, firstname, lastname) 
 		= (args.(0), args.(1), args.(2), args.(3)) in
 	let file = read_whole_file filename in
-	let string_profs = split_words file in
+	let string_profs = Str.split (Str.regexp "\n") file in
 	let array_string_profs = Array.of_list string_profs in
 	let seq_string_profs = PSeq.seq_of_array array_string_profs in
 	let seq_profs = PSeq.map (fun x -> convert x) seq_string_profs in
 	let profile = PSeq.reduce (fun x y -> if x.firstname = firstname && x.lastname = lastname then x else y) 
 		(PSeq.nth seq_profs 0) seq_profs in
-	let matched_profs = PSeq.map (fun x -> (x, compute_match profile x)) seq_profs in
+	let matched_profs = PSeq.map (fun x -> ((compute_match profile x), x)) seq_profs in
+	let matched_format_array = PSeq.array_of_seq matched_profs in
+	let matched_list = Array.to_list matched_format_array in
+	
 (*	let array_matched_profs = PSeq.array_of_seq matched_profs in
 	let sorted = Array.sort (fun (x_prof, x_float) (y_prof, y_float) -> if x_float <. y_float then (  *)
-	
+	(*
 	let rec aux (seq:(profile * float) PSeq.t) (n:int) (l:profile * (float * profile) list) = 
 		match n with 
 		| 0 -> l
@@ -116,15 +121,15 @@ let matchme (args : string array) : unit =
 			let (best_prof, best_float) = PSeq.reduce (fun (x_prof, x_float) (y_prof, y_float) ->
 				if x_float > y_float then (x_prof, x_float) else (y_prof, y_float)) (profile, -1.0) seq
 			in 
-			let next_seq = PSeq.reduce (fun (x_prof, x_float) (y:(profile*float) PSeq.t) -> 
+			let next_seq = PSeq.reduce (fun ((x_prof:profile), (x_float:float)) (y:(profile*float) PSeq.t) -> 
 				if p_equals x_prof best_prof then y 
-				else PSeq.cons (x_prof, x_float) y)
+				else y)
 				(PSeq.singleton (profile, -1.0)) seq
 			in
 			aux next_seq (n-1) ((best_prof, best_float) :: l)
 	in 
-	let matches_list = aux matched_profs num_matches [] in
-	print_matches num_matches matches_list
+	let matched_list = aux matched_profs num_matches [] in *)
+	print_matches num_matches (profile, take matched_list (int_of_string num_matches))
 		
 
 
