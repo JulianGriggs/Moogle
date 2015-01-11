@@ -95,7 +95,31 @@ module PSeq = Sequence.ListSeq
 let p_equals (p1:profile) (p2:profile) : bool = 
 	p1.firstname = p2.firstname && p1.lastname = p2.lastname
 
-let compute_match (me:profile) (you:profile) : float = 0.
+let count_similarities (me:profile) (you:profile) : int =
+	if me.age <= you.hi_agepref && me.age >= you.lo_agepref && you.age <= me.hi_agepref && you.age >= me.lo_agepref
+	then 1 else 0 +
+	if me.profession = you.profession then 1 else 0 +
+	if me.has_children = you.has_children then 1 else 0 +
+	if me.wants_children = you.wants_children then 1 else 0 +
+	if me.leisure = you.leisure then 1 else 0 + 
+	if me.drinks = you.drinks then 1 else 0 +
+	if me.smokes = you.smokes then 1 else 0 +
+	if me.music = you.music then 1 else 0 +
+	if me.build = you.build then 1 else 0 +
+	if me.height = you.height then 1 else 0
+
+let compute_match (me:profile) (you:profile) : float = 
+	match me.sex,me.orientation,you.sex,you.orientation with
+	| "M","M","straight",_ -> 0.
+	| "M","M",_,"straight" -> 0.
+  | "F","F","straight",_ -> 0.
+  | "F","F",_,"straight" -> 0.
+	| "M","F","gay/lesbian",_ -> 0.
+	| "M","F",_,"gay/lesbian" -> 0.
+	| "F","M","gay/lesbian",_ -> 0.
+	| "F","M",_,"gay/lesbian" -> 0.
+	| _,_,_,_ -> float_of_int (count_similarities me you) /. 10.
+		
 
 let matchme (args : string array) : unit = 
 	let (filename, num_matches, firstname, lastname) 
@@ -110,7 +134,8 @@ let matchme (args : string array) : unit =
 	let matched_profs = PSeq.map (fun x -> ((compute_match profile x), x)) seq_profs in
 	let matched_format_array = PSeq.array_of_seq matched_profs in
 	let matched_list = Array.to_list matched_format_array in
-	
+	let sorted_matched_list = 
+		List.sort (fun (f1,p1) (f2,p2) -> if f1 > f2 then -1 else if f1 < f2 then 1 else 0) matched_list in
 (*	let array_matched_profs = PSeq.array_of_seq matched_profs in
 	let sorted = Array.sort (fun (x_prof, x_float) (y_prof, y_float) -> if x_float <. y_float then (  *)
 	(*
@@ -129,7 +154,7 @@ let matchme (args : string array) : unit =
 			aux next_seq (n-1) ((best_prof, best_float) :: l)
 	in 
 	let matched_list = aux matched_profs num_matches [] in *)
-	print_matches num_matches (profile, take matched_list (int_of_string num_matches))
+	print_matches num_matches (profile, take sorted_matched_list (int_of_string num_matches))
 		
 
 
