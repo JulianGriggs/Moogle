@@ -96,29 +96,29 @@ let p_equals (p1:profile) (p2:profile) : bool =
 	p1.firstname = p2.firstname && p1.lastname = p2.lastname
 
 let count_similarities (me:profile) (you:profile) : int =
-	if me.age <= you.hi_agepref && me.age >= you.lo_agepref && you.age <= me.hi_agepref && you.age >= me.lo_agepref
-	then 1 else 0 +
-	if me.profession = you.profession then 1 else 0 +
-	if me.has_children = you.has_children then 1 else 0 +
-	if me.wants_children = you.wants_children then 1 else 0 +
-	if me.leisure = you.leisure then 1 else 0 + 
-	if me.drinks = you.drinks then 1 else 0 +
-	if me.smokes = you.smokes then 1 else 0 +
-	if me.music = you.music then 1 else 0 +
-	if me.build = you.build then 1 else 0 +
-	if me.height = you.height then 1 else 0
+	(if me.age <= you.hi_agepref && me.age >= you.lo_agepref && you.age <= me.hi_agepref && you.age >= me.lo_agepref
+	then 1 else 0) +
+	(if me.profession = you.profession then 1 else 0) +
+	(if me.has_children = you.has_children then 1 else 0) +
+	(if me.wants_children = you.wants_children then 1 else 0) +
+	(if me.leisure = you.leisure then 1 else 0) + 
+	(if me.drinks = you.drinks then 1 else 0) +
+	(if me.smokes = you.smokes then 1 else 0) +
+	(if me.music = you.music then 1 else 0) +
+	(if me.build = you.build then 1 else 0) +
+	(if me.height = you.height then 1 else 0)
 
 let compute_match (me:profile) (you:profile) : float = 
-	match me.sex,me.orientation,you.sex,you.orientation with
-	| "M","M","straight",_ -> 0.
-	| "M","M",_,"straight" -> 0.
-  | "F","F","straight",_ -> 0.
-  | "F","F",_,"straight" -> 0.
-	| "M","F","gay/lesbian",_ -> 0.
-	| "M","F",_,"gay/lesbian" -> 0.
-	| "F","M","gay/lesbian",_ -> 0.
-	| "F","M",_,"gay/lesbian" -> 0.
-	| _,_,_,_ -> float_of_int (count_similarities me you) /. 10.
+	match me.sex, you.sex, me.orientation, you.orientation with
+	| "M","M","straight",_ -> 0.0
+	| "M","M",_,"straight" -> 0.0
+  | "F","F","straight",_ -> 0.0
+  | "F","F",_,"straight" -> 0.0
+	| "M","F","gay/lesbian",_ -> 0.0
+	| "M","F",_,"gay/lesbian" -> 0.0
+	| "F","M","gay/lesbian",_ -> 0.0
+	| "F","M",_,"gay/lesbian" -> 0.0
+	| _,_,_,_ -> (float_of_int (count_similarities me you)) /. 10.0
 		
 
 let matchme (args : string array) : unit = 
@@ -132,45 +132,26 @@ let matchme (args : string array) : unit =
 	let profile = PSeq.reduce (fun x y -> if x.firstname = firstname && x.lastname = lastname then x else y) 
 		(PSeq.nth seq_profs 0) seq_profs in
 	let matched_profs = PSeq.map (fun x -> ((compute_match profile x), x)) seq_profs in
-	let matched_format_array = PSeq.array_of_seq matched_profs in
-	let matched_list = Array.to_list matched_format_array in
-	let sorted_matched_list = 
-		List.sort (fun (f1,p1) (f2,p2) -> if f1 > f2 then -1 else if f1 < f2 then 1 else 0) matched_list in
-(*	let array_matched_profs = PSeq.array_of_seq matched_profs in
-	let sorted = Array.sort (fun (x_prof, x_float) (y_prof, y_float) -> if x_float <. y_float then (  *)
-	(*
-	let rec aux (seq:(profile * float) PSeq.t) (n:int) (l:profile * (float * profile) list) = 
-		match n with 
-		| 0 -> l
-		| _ -> 			
-			let (best_prof, best_float) = PSeq.reduce (fun (x_prof, x_float) (y_prof, y_float) ->
-				if x_float > y_float then (x_prof, x_float) else (y_prof, y_float)) (profile, -1.0) seq
-			in 
-			let next_seq = PSeq.reduce (fun ((x_prof:profile), (x_float:float)) (y:(profile*float) PSeq.t) -> 
-				if p_equals x_prof best_prof then y 
-				else y)
-				(PSeq.singleton (profile, -1.0)) seq
-			in
-			aux next_seq (n-1) ((best_prof, best_float) :: l)
-	in 
-	let matched_list = aux matched_profs num_matches [] in *)
-	print_matches num_matches (profile, take sorted_matched_list (int_of_string num_matches))
-		
+	
+  let getBestProfile seq = 
+    PSeq.reduce (fun (x_float, x_prof) (y_float, y_prof) ->
+        if x_float > y_float then (x_float, x_prof) else (y_float, y_prof)) (-1.0, profile) seq
+  in
 
+  let filterSequence seq best_prof = 
+    PSeq.map (fun (score, prof) -> if p_equals prof best_prof then (-1.0, prof) else (score, prof)) seq
+  in
 
-
-
-			(*	let (x_
-				let (p_old, f_old) = old in
-				let (y_seq, y_match) = y in
-				let (p_new, f_new) = y_match in
-				if f_new > f_old then ((PSeq.cons (p_old, f_old) y), Some (p_new, f_new)) 
-				else ((PSeq.cons (p_new, f_new) y), Some (p_old, f_old))) 
-		  (PSeq.empty, (profile, -1)) seq in
-			let (best_p, best_f) = best_match in
-			aux next_seq (n-1) ((profile, (best_f, best_p)) :: l)
-
-*)
+  let rec aux seq n l = 
+    match n with 
+    | 0 -> l
+    | _ ->      
+      let (best_float, best_prof) = getBestProfile seq in 
+      let next_seq = filterSequence seq best_prof in
+      aux next_seq (n-1) ((best_float, best_prof) :: l)
+  in 
+  let matches_list = aux matched_profs (int_of_string num_matches) [] in
+  print_matches num_matches (profile, matches_list)		
 
 
 
