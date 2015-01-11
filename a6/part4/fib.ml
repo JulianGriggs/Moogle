@@ -78,8 +78,10 @@ struct
     else 
       n 
 	
-  let rec fib (n:int) : int =     
-	 	AutoMemoizer.memo fib_body n
+  let fib1 = AutoMemoizer.memo fib_body
+
+  let fib (n:int) : int =     
+	 	fib1 n
 end;;
 
 (* main function/testing *)
@@ -121,14 +123,17 @@ let experiment (n:int) : unit =
   let automated = 
     time_fun AutoMemoedFib.fib    (* CHANGE THIS! *)
   in  
-  print_row n (slow n) (fast n) (manual n) (automated n)
+  print_row n (slow n) (fast n) (manual n) (automated n);
+  let _ = assert ((ManualMemoedFib.fib n) = (AutoMemoedFib.fib n) &&
+                  (FastFib.fib n) = (AutoMemoedFib.fib n)) in
+  ()
 ;;
 
 let main () =
   (* change these numbers if you want depending on the speed of your machine *)
   (* on my machine slow_fib starts taking visible time at input 30 *)
   let trials = [0;1;2;10;20;30;40;
-		50;100;25000;50000;100000;100001;200000] in
+		50;100;25000;50000;100000;100001;200000;400000;400001] in
   print_header();
   List.iter experiment trials
 ;;

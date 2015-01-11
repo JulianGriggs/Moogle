@@ -64,14 +64,14 @@ module Memoizer (D : DICT) : MEMOIZER with type key = D.key =
 struct
   type key = D.key
 
-  let memo (f:(key->'a)->key->'a) : key->'a =
+  let rec memo (f:(key->'a)->key->'a) : key->'a =
     let history = ref (D.empty) in
 		let rec f_memoed x =
       try D.find x (!history) with
-	  Not_found ->
-	    let result = f f_memoed x in
-	    history := D.add x result (!history); 
-	    result
+	      Not_found ->
+	       let result = f f_memoed x in
+	       history := D.add x result (!history); 
+	       result
     in
     f_memoed
 	
