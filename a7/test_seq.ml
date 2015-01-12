@@ -100,7 +100,7 @@ let test_reduce_empty () =
   assert (ParSeq.reduce (+) 100 test_seq_empty = 100)
 
 let test_reduce () = 
-	print_endline (string_of_int (ParSeq.reduce (+) 1 (ParSeq.seq_of_array [|1;2;3;4;5|])));
+	(* print_endline (string_of_int (ParSeq.reduce (+) 1 (ParSeq.seq_of_array [|1;2;3;4;5|]))); *)
   check_all (ParSeq.reduce (+) 1) (=) [|16; 16; 16|]
 
 let test_map_empty () = 
@@ -268,7 +268,7 @@ let () =
 
   run_tests tests bmarks;
 
-	print_endline (string_of_int (ParSeq.reduce (+) 0 (ParSeq.seq_of_array [|1|])))
+	print_endline (string_of_int (ParSeq.reduce (+) 0 (ParSeq.seq_of_array [||])))
 
 
 
