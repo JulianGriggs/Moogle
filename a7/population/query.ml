@@ -3,8 +3,8 @@ open Future
 open Sequence
 open Printf
 
-module S = Seq(PFuture)(struct let use_mpi = true end)
-
+(* module S = Seq(PFuture)(struct let use_mpi = true end) *)
+module S = ListSeq
 type group = {pop:int; lat:float; lon:float}
 type area = {left:float; right:float; top:float; bottom:float}
 
@@ -108,14 +108,29 @@ let population_search (groups: group S.t) (query: area) : int =
  * at each rectangle (x,y) for all groups in rectangles from (1,1) to (x,y).
  * You MUST perform this precompution using parallel prefix scans
  **************************************************************************)
+let initialize_grid (groups: group S.t) (us_area: area) (rows,cols) : int S.t S.t = 
+  let us_pop_array = S.array_of_seq (S.tabulate (fun x -> S.array_of_seq (S.tabulate (fun y -> 1) cols)) rows) in
+	let _ = S.iter (fun group -> 
+		let (row, col) = rowcol_of_latlon us_area (rows,cols)	(group.lat,group.lon) in
+		let old_value = Array.get (Array.get us_pop_array row) col in 
+		Array.set (Array.get us_pop_array row) col (old_value + group.pop)) groups
+	in 
+	let arr_of_seq = Array.map (fun x -> S.seq_of_array x) us_pop_array in
+	S.seq_of_array arr_of_seq
 
 
 let precompute (groups: group S.t) (us_area: area) (rows,cols) : int S.t S.t = 
-  failwith "pre: implement me"
+	let initial = initialize_grid groups us_area (rows,cols) in
+  initial
 
  
 let population_lookup (summed_areas: int S.t S.t) (l,b,r,t) : int = 
-  failwith "look: implement me"
+  let top_left = S.nth (S.nth summed_areas t) l in
+	let top_right = S.nth (S.nth summed_areas t) r in
+	let bottom_left = S.nth (S.nth summed_areas b) l in
+	let bottom_right = S.nth (S.nth summed_areas b) r in
+	top_right - bottom_right - top_left + bottom_left
+	
 
 
 
