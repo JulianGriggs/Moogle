@@ -268,7 +268,7 @@ let () =
 
   run_tests tests bmarks;
 
-	print_endline (string_of_int (ParSeq.reduce (+) 0 (ParSeq.seq_of_array [|1;2;3;4|])))
+	(* print_endline (string_of_int (ParSeq.reduce (+) 0 (ParSeq.seq_of_array [|1;2;3;4|]))) *)
 
 
 

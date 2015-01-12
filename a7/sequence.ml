@@ -192,19 +192,22 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
     if length = 0 then base 
 		else if length < 2*num_cores then Array.fold_right f seq base 
     else 
-  		let chunk_size = length/num_cores + 1 in
+  		let chunk_size = length / num_cores in
+
   		let reduce_chunk (f:'a->'a->'a) (num_chunk:int) (n:int) =
-  			let start_i = num_chunk*chunk_size in
+  			let start_i = num_chunk * chunk_size in
   			let size = 
-					if start_i + chunk_size < n then chunk_size 
-  				else (if n - start_i < 0 then 0 else n - start_i) in
-				if size = 0 then failwith "Impossible"
-				else if size = 1 then seq.(start_i) 
+          if num_chunk = num_cores - 1 then n - start_i
+  				else chunk_size
+        in
+        (* Size is never 0 due to cut off for small size sequences *)
+				if size = 1 then seq.(start_i) 
 				else
   				let copy = Array.make (size-1) seq.(0) in
   				Array.blit seq start_i copy 0 (size-1);
   				Array.fold_right f copy seq.(start_i + size-1)
   		in
+      
   		let reduce_each = 
   			Array.init num_cores (fun i -> F.future (reduce_chunk f i) length)
       in
