@@ -120,10 +120,15 @@ let initialize_grid (groups: group S.t) (us_area: area) (rows,cols) : int S.t S.
 	let arr_of_seq = Array.map (fun x -> S.seq_of_array x) us_pop_array in
 	S.seq_of_array arr_of_seq
 
-
 let precompute (groups: group S.t) (us_area: area) (rows,cols) : int S.t S.t = 
-	let initial = initialize_grid groups us_area (rows,cols) in
-  initial
+	if rows = 0 then S.empty ()
+	else  
+		let initial = initialize_grid groups us_area (rows,cols) in
+		let length = S.length (S.nth initial 0) in
+		let right_pass = S.map (S.scan (+) 0) initial in
+		let f = (fun seq1 seq2 -> S.tabulate (fun i -> (S.nth seq1 i) + (S.nth seq2 i)) length) in 
+		let zero_row = S.tabulate (fun i -> 0) length in
+		S.scan f zero_row right_pass 
 
  
 let population_lookup (summed_areas: int S.t S.t) (l,b,r,t) : int = 
