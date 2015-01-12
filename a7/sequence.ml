@@ -117,25 +117,25 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   let array_of_seq seq = seq
 
 
-  let iter f seq = failwith "implement me"
+  let iter f seq = Array.iter f seq
 
 
-  let length seq = failwith "implement me"
+  let length seq = Array.length seq
 
 
-  let empty () = failwith "implement me"
+  let empty () = [||]
 
 
   let cons elem seq = failwith "implement me"
 
 
-  let singleton elem = failwith "implement me"
+  let singleton elem = [|elem|]
 
 
-  let append seq1 seq2 = failwith "implement me"
+  let append seq1 seq2 = Array.append seq1 seq2
 
 
-  let nth seq i = failwith "implement me"
+  let nth seq i = seq.(i)
 
 
   let map f seq = failwith "implement me"
@@ -147,16 +147,40 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   let reduce r = failwith "implement me"
 
 
-  let flatten seqseq = failwith "implement me"
+  let flatten seqseq = 
+		let list_of_seq = Array.to_list seqseq in
+		Array.concat list_of_seq
+		
+
+  let repeat elem num = Array.copy (Array.make num elem)
 
 
-  let repeat elem num = failwith "implement me"
+  let zip (seq1,seq2) = 
+		if Array.length seq1 = 0 || Array.length seq2 = 0
+		then ([||]) 
+		else 
+			let length = if Array.length seq1 > Array.length seq2 
+			then Array.length seq2 else Array.length seq1 in
+			let zipped = Array.make length (seq1.(0),seq2.(0)) in
+			let rec aux n = 
+				match n with
+				| 0 -> ()
+				| _ -> zipped.(n-1) <- (seq1.(n-1),seq2.(n-1)); 
+					aux (n-1)
+			in aux length; 
+			Array.copy zipped
+		
 
 
-  let zip (seq1,seq2) = failwith "implement me"
-
-
-  let split seq x = failwith "implement me"
+  let split seq x = 
+		let length = Array.length seq in
+		if x >= length then failwith "split"
+		else 
+			let seq1 = Array.make x seq.(0) in
+			let seq2 = Array.make (length - x) seq.(0) in 
+			Array.blit seq 0 seq1 0 x; Array.blit seq (length - x) seq2 0 (length - x);
+			(Array.copy seq1, Array.copy seq2)
+		
 
 
   (*******************************************************)
