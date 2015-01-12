@@ -3,10 +3,8 @@ open Util
 open Sequence
 open Map
 
-(*module PSeq = Sequence.Seq(PFuture)(struct let use_mpi = true end)*)
-module PSeq = ListSeq
-(* module Seq = ListSeq.Make() *)
-(* module Seq = ParaSeq.Make() *)
+module PSeq = Sequence.Seq(PFuture)(struct let use_mpi = true end)
+(*module PSeq = ListSeq*)
 
 module Dict = Map.Make(String)
 

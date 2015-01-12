@@ -265,7 +265,7 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   (* Here you will implement a version of the parallel prefix scan for a sequence 
    * [a0; a1; ...], the result of scan will be [f base a0; f (f base a0) a1; ...] *)
   let scan (f: 'a -> 'a -> 'a) (base: 'a) (seq: 'a t) : 'a t =
-    failwith "implement me"
+    seq
         
 end
 

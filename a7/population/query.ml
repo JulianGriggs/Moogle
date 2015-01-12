@@ -124,7 +124,7 @@ let precompute (groups: group S.t) (us_area: area) (rows,cols) : int S.t S.t =
 	if rows = 0 then S.empty ()
 	else  
 		let initial = initialize_grid groups us_area (rows,cols) in
-		(*initial*)
+			(*initial*)
 		let length = S.length (S.nth initial 0) in
 		let right_pass = S.map (S.scan (+) 0) initial in
 		(*right_pass*)
