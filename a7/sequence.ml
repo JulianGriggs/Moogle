@@ -127,15 +127,15 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 		let chunk_size = n/num_cores + 1 in
 		let tabulate_chunk (f:int->'a) (num_chunk:int) (n:int) = 
 			let start_i = num_chunk*chunk_size in
-			let size = if start_i + chunk_size < n then chunk_size else n - start_i in
+			let size = if start_i + chunk_size < n then chunk_size 
+				else (if n - start_i < 0 then 0 else n - start_i) in
+			if (size < 0) then print_string (string_of_int start_i) else ();
 			Array.init size (fun i -> f (i + start_i))
 		in 
 		let tabulate_each =
 			Array.init num_cores (fun i -> F.future (tabulate_chunk f i) n) 
 		in
-		(*print_array(tabulate_chunk_debug (fun i -> i) 3 10);*)
-		[||]
-		(*flatten (Array.map F.force tabulate_each)*)
+		flatten (Array.map F.force tabulate_each)
 		
 
   let seq_of_array a = a
@@ -166,7 +166,8 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   let nth seq i = seq.(i)
 
 
-  let map f seq = failwith "implement me"
+  let map f seq = 
+		tabulate (fun i -> f seq.(i)) (Array.length seq)
 
 
   let map_reduce m r b seq = failwith "implement me"

@@ -206,12 +206,11 @@ let bench_scan () =
   tseq /. tpar
 
 let test_tabulate () = 
-	let results = ParSeq.tabulate (fun i -> i) 5 in
-	()
-(*	assert (results = ParSeq.seq_of_array [|1;2;3;4;5|])
-	assert (results.(0) = 0);
-	assert (results.(4) = 4)*)
-
+	let result1 = ParSeq.tabulate (fun i -> i) 20 in
+	let result2 = ParSeq.tabulate (fun i -> i) 5 in
+	assert (result1 = ParSeq.seq_of_array [|0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19|]);
+	assert (result2 = ParSeq.seq_of_array [|0;1;2;3;4|])
+	
 let run_tests tests bmarks = 
   let rec test_aux ts = 
     match ts with
