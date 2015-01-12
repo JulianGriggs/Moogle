@@ -171,14 +171,13 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 			Array.copy zipped
 		
 
-
   let split seq x = 
 		let length = Array.length seq in
 		if x >= length then failwith "split"
 		else 
 			let seq1 = Array.make x seq.(0) in
 			let seq2 = Array.make (length - x) seq.(0) in 
-			Array.blit seq 0 seq1 0 x; Array.blit seq (length - x) seq2 0 (length - x);
+			Array.blit seq 0 seq1 0 x; Array.blit seq x seq2 0 (length - x);
 			(Array.copy seq1, Array.copy seq2)
 		
 
