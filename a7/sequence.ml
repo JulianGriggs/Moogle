@@ -219,7 +219,7 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
       let deopt x = 
         match x with 
         | Some x' -> x'
-        | _ -> failwith "impossible"
+        | _ -> failwith "Impossible"
       in
       let temp1 = Array.map F.force reduce_each in
   		deopt (Array.fold_right outer_f_wrapper (temp1) (Some base))
