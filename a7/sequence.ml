@@ -190,41 +190,27 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 	let reduce (f:'a->'a->'a) (base:'a) seq = 
 		let length = Array.length seq in
     if length = 0 then base 
+		else if length < 2*num_cores then Array.fold_right f seq base 
     else 
   		let chunk_size = length/num_cores + 1 in
   		let reduce_chunk (f:'a->'a->'a) (num_chunk:int) (n:int) =
   			let start_i = num_chunk*chunk_size in
-  			let size = if start_i + chunk_size < n then chunk_size 
+  			let size = 
+					if start_i + chunk_size < n then chunk_size 
   				else (if n - start_i < 0 then 0 else n - start_i) in
-  			let copy = Array.make size seq.(0) in
-  			if size != 0 then	Array.blit seq start_i copy 0 size else ();
-        let copy_option = Array.map (fun x -> Some(x)) copy in 
-  			let inner_f_wrapper x y = 
-  				match x,y with 
-          | Some x', None -> Some x'
-  				| Some x', Some y'-> Some (f x' y')
-          | _ -> failwith "Impossible"
-  			in 
-  			Array.fold_right inner_f_wrapper copy_option None
+				if size = 0 then failwith "Impossible"
+				else if size = 1 then seq.(start_i) 
+				else
+  				let copy = Array.make (size-1) seq.(0) in
+  				Array.blit seq start_i copy 0 (size-1);
+  				Array.fold_right f copy seq.(size-1)
   		in
   		let reduce_each = 
   			Array.init num_cores (fun i -> F.future (reduce_chunk f i) length)
-  	  in 
-      let outer_f_wrapper x y = 
-          match x,y with 
-          | None, Some y' -> Some y'
-          | Some x', Some y'-> Some (f x' y')
-          | _ -> failwith "Impossible"
-      in
-      let deopt x = 
-        match x with 
-        | Some x' -> x'
-        | _ -> failwith "Impossible"
       in
       let temp1 = Array.map F.force reduce_each in
-  		deopt (Array.fold_right outer_f_wrapper (temp1) (Some base))
+  		Array.fold_right f (temp1) (base)
 
-	
 
   let repeat elem num = Array.copy (Array.make num elem)
 
