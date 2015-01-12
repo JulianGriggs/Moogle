@@ -124,19 +124,29 @@ let precompute (groups: group S.t) (us_area: area) (rows,cols) : int S.t S.t =
 	if rows = 0 then S.empty ()
 	else  
 		let initial = initialize_grid groups us_area (rows,cols) in
+		(*initial*)
 		let length = S.length (S.nth initial 0) in
 		let right_pass = S.map (S.scan (+) 0) initial in
+		(*right_pass*)
 		let f = (fun seq1 seq2 -> S.tabulate (fun i -> (S.nth seq1 i) + (S.nth seq2 i)) length) in 
 		let zero_row = S.tabulate (fun i -> 0) length in
 		S.scan f zero_row right_pass 
 
  
 let population_lookup (summed_areas: int S.t S.t) (l,b,r,t) : int = 
-  let top_left = S.nth (S.nth summed_areas t) l in
-	let top_right = S.nth (S.nth summed_areas t) r in
-	let bottom_left = S.nth (S.nth summed_areas b) l in
-	let bottom_right = S.nth (S.nth summed_areas b) r in
-	top_right - bottom_right - top_left + bottom_left
+	let l' = if l = 1 then 0 else l-2 in
+	let b' = if b = 1 then 0 else b-2 in
+	let r' = r-1 in
+	let t' = t-1 in
+  let top_left = S.nth (S.nth summed_areas t') l' in
+	let top_right = S.nth (S.nth summed_areas t') r' in
+	let bottom_left = S.nth (S.nth summed_areas b') l' in
+	let bottom_right = S.nth (S.nth summed_areas b') r' in
+	let a1 = top_right in
+	if l = 1 && b = 1 then top_right
+	else if l = 1 then top_right - bottom_right 
+	else if b = 1 then top_right - top_left
+	else top_right - bottom_right - top_left + bottom_left
 	
 
 
