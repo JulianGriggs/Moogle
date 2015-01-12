@@ -203,7 +203,7 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 				else
   				let copy = Array.make (size-1) seq.(0) in
   				Array.blit seq start_i copy 0 (size-1);
-  				Array.fold_right f copy seq.(size-1)
+  				Array.fold_right f copy seq.(start_i + size-1)
   		in
   		let reduce_each = 
   			Array.init num_cores (fun i -> F.future (reduce_chunk f i) length)
