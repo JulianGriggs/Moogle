@@ -113,31 +113,29 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 		let list_of_seq = Array.to_list seqseq in
 		Array.concat list_of_seq
 
+	let print_array (arr:int array) = 
+		Array.iter (fun x -> print_string (string_of_int x)) arr 
+
+	let tabulate_chunk_debug (f:int->int) (num_chunk:int) (n:int) = 
+		let chunk_size = n/num_cores + 1 in
+		let start_i = num_chunk*chunk_size in
+		let size = if start_i + chunk_size < n then chunk_size else n - start_i in
+		Array.init size (fun i -> f (i + start_i))
+	 
 
   let tabulate f n = 
 		let chunk_size = n/num_cores + 1 in
 		let tabulate_chunk (f:int->'a) (num_chunk:int) (n:int) = 
-			print_endline "here1";
 			let start_i = num_chunk*chunk_size in
-						print_endline "here2";
-
 			let size = if start_i + chunk_size < n then chunk_size else n - start_i in
-						print_endline "here3";
-
 			Array.init size (fun i -> f (i + start_i))
-			
-
 		in 
 		let tabulate_each =
-						print_endline "here5";
-
 			Array.init num_cores (fun i -> F.future (tabulate_chunk f i) n) 
-						
-
 		in
-					print_endline "here7";
-
-		flatten (Array.map F.force tabulate_each)
+		(*print_array(tabulate_chunk_debug (fun i -> i) 3 10);*)
+		[||]
+		(*flatten (Array.map F.force tabulate_each)*)
 		
 
   let seq_of_array a = a

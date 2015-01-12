@@ -207,7 +207,7 @@ let bench_scan () =
 
 let test_tabulate () = 
 	let results = ParSeq.tabulate (fun i -> i) 5 in
-	print_endline (string_of_int( 3))
+	()
 (*	assert (results = ParSeq.seq_of_array [|1;2;3;4;5|])
 	assert (results.(0) = 0);
 	assert (results.(4) = 4)*)
