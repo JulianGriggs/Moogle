@@ -267,8 +267,6 @@ let () =
 
   run_tests tests bmarks;
 
-	test_tabulate () 
-
 
 
 

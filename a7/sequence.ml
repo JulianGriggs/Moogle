@@ -172,10 +172,37 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 
   let map_reduce m r b seq = failwith "implement me"
 
+		let reduce_chunk_debug (f:int->int->int) (base:int) (num_chunk:int) (n:int) seq =
+			let length = Array.length seq in
+			let chunk_size = length/num_cores + 1 in
+			let start_i = num_chunk*chunk_size in
+			let size = if start_i + chunk_size < n then chunk_size 
+				else (if n - start_i < 0 then 0 else n - start_i) in
+			let copy = Array.make size seq.(0) in
+			Array.blit seq start_i copy 0 size;
+			Array.fold_right f copy base
 
-  let reduce r = failwith "implement me"
-
-		
+(*	let reduce_each_debug f base length seq = 
+			Array.init num_cores (fun i -> F.future (reduce_chunk_debug f base i length seq) length)
+*)
+  let reduce (f:'a->'a->'a) (base:'a) seq = 
+		let length = Array.length seq in
+		let chunk_size = length/num_cores + 1 in
+		let reduce_chunk (f:'a->'a->'a) (num_chunk:int) (n:int) =
+			let start_i = num_chunk*chunk_size in
+			let size = if start_i + chunk_size < n then chunk_size 
+				else (if n - start_i < 0 then 0 else n - start_i) in
+			let copy = Array.make size seq.(0) in
+			Array.blit seq start_i copy 0 size;
+			Array.fold_right f copy base
+		in
+		let reduce_each = 
+			Array.init num_cores (fun i -> F.future (reduce_chunk f i) length)
+	  in 
+		print_endline (string_of_int (reduce_chunk_debug (+) 1 2 10 [|1;2;3;4;5;6;7;8;9;10|])); 
+(*		print_endline (string_of_int (Array.fold_right f (Array.map F.force (reduce_each_debug (+) 0 10 [|1;2;3;4;5;6;7;8;9;10|])))); *)
+		Array.fold_right f (Array.map F.force reduce_each) base
+			
 
   let repeat elem num = Array.copy (Array.make num elem)
 
