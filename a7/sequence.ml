@@ -170,23 +170,36 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 		tabulate (fun i -> f seq.(i)) (Array.length seq)
 
 
-  let map_reduce m r b seq = failwith "implement me"
+  let map_reduce (m:'a->'b) (r:'b -> 'b -> 'b) (b:'b) seq : 'b = 
+		let fold_f (m:'a->'b) (r:'b->'b->'b) = (fun x y -> r (m x) (y)) in
+		let length = Array.length seq in
+    if length = 0 then b
+		else if length < 2*num_cores then Array.fold_right (fold_f m r) seq b 
+    else 
+  		let chunk_size = length / num_cores in
 
-		let reduce_chunk_debug (f:int->int->int) (base:int) (num_chunk:int) (n:int) seq =
-			let length = Array.length seq in
-			let chunk_size = length/num_cores + 1 in
-			let start_i = num_chunk*chunk_size in
-			let size = if start_i + chunk_size < n then chunk_size 
-				else (if n - start_i < 0 then 0 else n - start_i) in
-			let copy = Array.make size seq.(0) in
-			Array.blit seq start_i copy 0 size;
-			Array.fold_right f copy base
+  		let map_reduce_chunk (num_chunk:int) (n:int) =
+  			let start_i = num_chunk * chunk_size in
+  			let size = 
+          if num_chunk = num_cores - 1 then n - start_i
+  				else chunk_size
+        in
+        (* Size is never 0 due to cut off for small size sequences *)
+				if size = 1 then m seq.(start_i) 
+				else
+  				let copy = Array.make (size-1) seq.(0) in
+  				Array.blit seq start_i copy 0 (size-1);
+  				Array.fold_right (fold_f m r) copy (m seq.(start_i + size-1))
+  		in
+      
+  		let map_reduce_each = 
+  			Array.init num_cores (fun i -> F.future (map_reduce_chunk i) length)
+      in
+      let temp1 = Array.map F.force map_reduce_each in
+  		Array.fold_right r (temp1) (b)
 
-(*	let reduce_each_debug f base length seq = 
-			Array.init num_cores (fun i -> F.future (reduce_chunk_debug f base i length seq) length)
-*)
-  
-		
+
+
 	let reduce (f:'a->'a->'a) (base:'a) seq = 
 		let length = Array.length seq in
     if length = 0 then base 
