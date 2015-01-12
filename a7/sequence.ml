@@ -99,6 +99,7 @@ module type SEQ_ARGS = sig
   val use_mpi: bool
 end
 
+module F = Future.PFuture
 
 module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 
@@ -108,8 +109,36 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   let num_cores = System.cpu_count ()
 
 
-  let tabulate f n = failwith "implement me"
+  let flatten seqseq = 
+		let list_of_seq = Array.to_list seqseq in
+		Array.concat list_of_seq
 
+
+  let tabulate f n = 
+		let chunk_size = n/num_cores + 1 in
+		let tabulate_chunk (f:int->'a) (num_chunk:int) (n:int) = 
+			print_endline "here1";
+			let start_i = num_chunk*chunk_size in
+						print_endline "here2";
+
+			let size = if start_i + chunk_size < n then chunk_size else n - start_i in
+						print_endline "here3";
+
+			Array.init size (fun i -> f (i + start_i))
+			
+
+		in 
+		let tabulate_each =
+						print_endline "here5";
+
+			Array.init num_cores (fun i -> F.future (tabulate_chunk f i) n) 
+						
+
+		in
+					print_endline "here7";
+
+		flatten (Array.map F.force tabulate_each)
+		
 
   let seq_of_array a = a
 
@@ -126,7 +155,8 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   let empty () = [||]
 
 
-  let cons elem seq = failwith "implement me"
+  let cons elem seq = 
+		Array.append [|elem|] seq
 
 
   let singleton elem = [|elem|]
@@ -146,10 +176,6 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 
   let reduce r = failwith "implement me"
 
-
-  let flatten seqseq = 
-		let list_of_seq = Array.to_list seqseq in
-		Array.concat list_of_seq
 		
 
   let repeat elem num = Array.copy (Array.make num elem)

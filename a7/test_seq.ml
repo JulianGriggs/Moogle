@@ -105,6 +105,7 @@ let test_reduce () =
 let test_map_empty () = 
   assert (pseq_eq (ParSeq.map ((+) 1) test_seq_empty) test_seq_empty)
 
+
 let test_map () = 
   let results = 
     [| (ParSeq.seq_of_array [|2;3;4;5;6|]);
@@ -204,6 +205,12 @@ let bench_scan () =
   assert_equal r1 r2;
   tseq /. tpar
 
+let test_tabulate () = 
+	let results = ParSeq.tabulate (fun i -> i) 5 in
+	print_endline (string_of_int( 3))
+(*	assert (results = ParSeq.seq_of_array [|1;2;3;4;5|])
+	assert (results.(0) = 0);
+	assert (results.(4) = 4)*)
 
 let run_tests tests bmarks = 
   let rec test_aux ts = 
@@ -256,11 +263,12 @@ let () =
      ("split      ", test_split);
      ("scan       ", test_scan_empty);
      ("scan       ", test_scan1);
-     ("scan       ", test_scan2) ] in
+     ("scan       ", test_scan2);
+		 ("tabulate   ", test_tabulate)] in
 
-  run_tests tests bmarks
+  run_tests tests bmarks;
 
-
+	test_tabulate () 
 
 
 
