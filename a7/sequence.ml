@@ -112,15 +112,6 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   let flatten seqseq = 
 		let list_of_seq = Array.to_list seqseq in
 		Array.concat list_of_seq
-
-	let print_array (arr:int array) = 
-		Array.iter (fun x -> print_string (string_of_int x)) arr 
-
-	let tabulate_chunk_debug (f:int->int) (num_chunk:int) (n:int) = 
-		let chunk_size = n/num_cores + 1 in
-		let start_i = num_chunk*chunk_size in
-		let size = if start_i + chunk_size < n then chunk_size else n - start_i in
-		Array.init size (fun i -> f (i + start_i))
 	 
 
   let tabulate f n = 
@@ -129,7 +120,6 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
 			let start_i = num_chunk*chunk_size in
 			let size = if start_i + chunk_size < n then chunk_size 
 				else (if n - start_i < 0 then 0 else n - start_i) in
-			if (size < 0) then print_string (string_of_int start_i) else ();
 			Array.init size (fun i -> f (i + start_i))
 		in 
 		let tabulate_each =
@@ -265,8 +255,34 @@ module Seq (Par : Future.S) (Arg : SEQ_ARGS) : S = struct
   (* Here you will implement a version of the parallel prefix scan for a sequence 
    * [a0; a1; ...], the result of scan will be [f base a0; f (f base a0) a1; ...] *)
   let scan (f: 'a -> 'a -> 'a) (base: 'a) (seq: 'a t) : 'a t =
-    seq
-        
+		(* seq *)
+		let length = Array.length seq in
+		let f_scan = (fun x y -> f x y) in
+    if length = 0 then base 
+		else if length < 2*num_cores then Array.fold_right f seq base 
+    else 
+  		let chunk_size = length / num_cores in
+			
+			let scan_chunk (f:'a->'a->'a) (num_chunk:int) (n:int) =
+  			let start_i = num_chunk * chunk_size in
+  			let size = 
+          if num_chunk = num_cores - 1 then n - start_i
+  				else chunk_size
+        in
+        (* Size is never 0 due to cut off for small size sequences *)
+				if size = 1 then seq.(start_i) 
+				else
+  				let copy = Array.make (size-1) seq.(0) in
+  				Array.blit seq start_i copy 0 (size-1);
+					let f_scan = (fun x y -> f x y) in
+  				Array.fold_right f_scan copy seq.(start_i + size-1)
+  		in
+			let scan_each = 
+  			Array.init num_cores (fun i -> F.future (scan_chunk f i) length)
+      in
+      let temp1 = Array.map F.force reduce_each in
+  		Array.fold_right f_scan (temp1) (base) 
+		
 end
 
 
